@@ -1,15 +1,7 @@
-# XMRig NVIDIA
+# CN8CardSaver for NVIDIA GPUs
 
-:warning: **You must update miners to version 2.5 before April 6 due [Monero PoW change](https://getmonero.org/2018/02/11/PoW-change-and-key-reuse.html).**
 
-[![Github All Releases](https://img.shields.io/github/downloads/xmrig/xmrig-nvidia/total.svg)](https://github.com/xmrig/xmrig-nvidia/releases)
-[![GitHub release](https://img.shields.io/github/release/xmrig/xmrig-nvidia/all.svg)](https://github.com/xmrig/xmrig-nvidia/releases)
-[![GitHub Release Date](https://img.shields.io/github/release-date-pre/xmrig/xmrig-nvidia.svg)](https://github.com/xmrig/xmrig-nvidia/releases)
-[![GitHub license](https://img.shields.io/github/license/xmrig/xmrig-nvidia.svg)](https://github.com/xmrig/xmrig-nvidia/blob/master/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/xmrig/xmrig-nvidia.svg)](https://github.com/xmrig/xmrig-nvidia/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/xmrig/xmrig-nvidia.svg)](https://github.com/xmrig/xmrig-nvidia/network)
-
-XMRig is high performance Monero (XMR) NVIDIA miner, with the official full Windows support.
+CN8CardSaver is a high performance Monero (XMR) NVIDIA miner based on XMRig-nvidia.
 
 GPU mining part based on [psychocrypt](https://github.com/psychocrypt) code used in xmr-stak-nvidia.
 
@@ -36,6 +28,7 @@ GPU mining part based on [psychocrypt](https://github.com/psychocrypt) code used
 * CryptoNight-Lite support for AEON.
 * Automatic GPU configuration.
 * GPU health monitoring (clocks, power, temperature, fan speed) 
+* GPU temperature management (option --max-gpu-temp)
 * Nicehash support.
 * It's open source software.
 
@@ -63,6 +56,7 @@ Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or sha
       --cuda-bfactor=[0-12] run CryptoNight core kernel in smaller pieces
       --cuda-bsleep=N       insert a delay of N microseconds between kernel launches
       --cuda-affinity=N     affine GPU threads to a CPU
+      --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
       --no-color            disable colored output
       --donate-level=N      donate level, default 5% (5 minutes in 100 minutes)
       --user-agent          set custom user-agent string for pool

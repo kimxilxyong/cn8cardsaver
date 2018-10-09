@@ -57,6 +57,8 @@ bool CudaCLI::setup(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo)
         ctx.device_threads = this->threads(i);
         ctx.device_bfactor = bfactor(i);
         ctx.device_bsleep  = bsleep(i);
+        ctx.device_maxtemp  = maxtemp(i);
+
         ctx.syncMode       = 3;
 
         if (cuda_get_deviceinfo(&ctx, algo) != 0) {
@@ -83,6 +85,7 @@ void CudaCLI::autoConf(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo)
         ctx.device_threads = -1;
         ctx.device_bfactor = bfactor();
         ctx.device_bsleep  = bsleep();
+        ctx.device_maxtemp  = maxtemp();
         ctx.syncMode       = 3;
 
         if (cuda_get_deviceinfo(&ctx, algo) != 0) {
@@ -159,7 +162,7 @@ int CudaCLI::get(const std::vector<int> &vector, int index, int defaultValue) co
         return defaultValue;
     }
 
-    if (vector.size() <= index) {
+    if (vector.size() <= (std::size_t)index) {
         return vector.back();
     }
 

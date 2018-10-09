@@ -6,6 +6,7 @@
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2019 kimxilxyong <https://github.com/kimxilxyong/cn8cardsaver>, kimxilxyong@gmail.com
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -31,8 +32,8 @@
 class SubmitResult
 {
 public:
-    inline SubmitResult() : reqId(0), seq(0), diff(0), actualDiff(0), elapsed(0), start(0) {}
-    SubmitResult(int64_t seq, uint32_t diff, uint64_t actualDiff, int64_t reqId = 0);
+    inline SubmitResult() : reqId(0), seq(0), diff(0), actualDiff(0), elapsed(0), threadId(0), start(0) {}
+    SubmitResult(int64_t seq, uint32_t diff, uint64_t actualDiff, int64_t reqId = 0, uint32_t threadId = -1);
 
     void done();
 
@@ -41,6 +42,7 @@ public:
     uint32_t diff;
     uint64_t actualDiff;
     uint64_t elapsed;
+    uint32_t threadId; 
 
 private:
     uint64_t start;

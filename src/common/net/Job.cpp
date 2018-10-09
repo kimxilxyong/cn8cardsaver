@@ -7,6 +7,7 @@
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
  * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2019 kimxilxyong <https://github.com/kimxilxyong/cn8cardsaver>, kimxilxyong@gmail.com
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -61,6 +62,7 @@ Job::Job() :
     m_nicehash(false),
     m_poolId(-2),
     m_threadId(-1),
+    m_deviceId(-1),
     m_size(0),
     m_diff(0),
     m_target(0),
@@ -73,6 +75,7 @@ Job::Job(int poolId, bool nicehash, xmrig::Algorithm algorithm, const xmrig::Id 
     m_nicehash(nicehash),
     m_poolId(poolId),
     m_threadId(-1),
+    m_deviceId(-1),
     m_size(0),
     m_diff(0),
     m_target(0),

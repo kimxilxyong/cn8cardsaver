@@ -36,24 +36,27 @@ class JobResult
 {
 public:
     inline JobResult() : poolId(0), diff(0), nonce(0) {}
-    inline JobResult(int poolId, const xmrig::Id &jobId, uint32_t nonce, const uint8_t *result, uint32_t diff, const xmrig::Algorithm &algorithm) :
+    inline JobResult(int poolId, const xmrig::Id &jobId, uint32_t nonce, const uint8_t *result, uint32_t diff, const xmrig::Algorithm &algorithm, uint32_t threadId) :
         poolId(poolId),
         diff(diff),
         nonce(nonce),
         algorithm(algorithm),
-        jobId(jobId)
+        jobId(jobId),
+        m_threadId(threadId)
     {
         memcpy(this->result, result, sizeof(this->result));
     }
 
 
-    inline JobResult(const Job &job) : poolId(0), diff(0), nonce(0)
+    inline JobResult(const Job &job) : poolId(0), diff(0), nonce(0),  m_threadId(0)
     {
         jobId     = job.id();
         poolId    = job.poolId();
         diff      = job.diff();
         nonce     = *job.nonce();
+        m_threadId  = job.threadId();
         algorithm = job.algorithm();
+        
     }
 
 
@@ -62,13 +65,15 @@ public:
         return Job::toDiff(reinterpret_cast<const uint64_t*>(result)[3]);
     }
 
-
+    
     int poolId;
     uint32_t diff;
     uint32_t nonce;
     uint8_t result[32];
     xmrig::Algorithm algorithm;
     xmrig::Id jobId;
+    uint32_t m_threadId;
+    
 };
 
 #endif /* __JOBRESULT_H__ */

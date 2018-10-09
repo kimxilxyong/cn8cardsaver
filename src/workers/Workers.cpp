@@ -6,6 +6,7 @@
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2019 kimxilxyong <https://github.com/kimxilxyong/cn8cardsaver>, kimxilxyong@gmail.com
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -139,6 +140,7 @@ void Workers::printHealth()
     Health health;
     for (const xmrig::IThread *t : m_controller->config()->threads()) {
         auto thread = static_cast<const CudaThread *>(t);
+        //LOG_INFO("****** thread->nvmlId() GPU %zu temp %zu", thread->nvmlId(), health.temperature);
         if (!NvmlApi::health(thread->nvmlId(), health)) {
             continue;
         }
@@ -308,11 +310,16 @@ void Workers::onResult(uv_async_t *)
 
             cryptonight_ctx *ctx = CryptoNight::createCtx(baton->jobs[0].algorithm().algo());
 
+            LOG_DEBUG("********** CryptoNight::createCtx %zu", baton->jobs[0].threadId() );
+
             for (const Job &job : baton->jobs) {
                 JobResult result(job);
 
                 if (CryptoNight::hash(job, result, ctx)) {
+                    result.m_threadId = job.threadId();
                     baton->results.push_back(result);
+                    LOG_DEBUG("********** CryptoNight::hash %zu", job.threadId() );
+
                 }
                 else {
                     baton->errors++;
@@ -325,6 +332,8 @@ void Workers::onResult(uv_async_t *)
             JobBaton *baton = static_cast<JobBaton*>(req->data);
 
             for (const JobResult &result : baton->results) {
+                
+                LOG_DEBUG("********** CryptoNight::onJobResult %zu", result.m_threadId );
                 m_listener->onJobResult(result);
             }
 

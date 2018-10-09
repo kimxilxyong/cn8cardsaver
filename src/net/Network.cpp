@@ -41,6 +41,8 @@
 #include "net/Network.h"
 #include "net/strategies/DonateStrategy.h"
 #include "workers/Workers.h"
+#include "nvidia/NvmlApi.h"
+#include "nvidia/Health.h"
 
 
 Network::Network(xmrig::Controller *controller) :
@@ -54,10 +56,10 @@ Network::Network(xmrig::Controller *controller) :
     const std::vector<Pool> &pools = controller->config()->pools();
 
     if (pools.size() > 1) {
-        m_strategy = new FailoverStrategy(pools, controller->config()->retryPause(), controller->config()->retries(), this);
+        m_strategy = new FailoverStrategy(pools, controller->config()->retryPause(), controller->config()->retries(), controller->config()->maxtemp(), this);
     }
     else {
-        m_strategy = new SinglePoolStrategy(pools.front(), controller->config()->retryPause(), controller->config()->retries(), this);
+        m_strategy = new SinglePoolStrategy(pools.front(), controller->config()->retryPause(), controller->config()->retries(), controller->config()->maxtemp(), this);
     }
 
     if (controller->config()->donateLevel() > 0) {
@@ -145,15 +147,21 @@ void Network::onResultAccepted(IStrategy *strategy, Client *client, const Submit
 {
     m_state.add(result, error);
 
+    Health health;
+    int deviceId = result.threadId;
+    LOG_DEBUG("********** onResultAccepted result.threadId %zu", deviceId );
+    
+    NvmlApi::health(deviceId, health);
+
     if (error) {
-        LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms)"
-                            : "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms)",
-                 m_state.accepted, m_state.rejected, result.diff, error, result.elapsed);
+        LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " MAGENTA_BOLD("GPU %zu %zu C")
+                            : "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) GPU %zu %zu C",
+                 m_state.accepted, m_state.rejected, result.diff, error, result.elapsed, deviceId, health.temperature);
     }
     else {
-        LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms)"
-                            : "accepted (%" PRId64 "/%" PRId64 ") diff %u (%" PRIu64 " ms)",
-                 m_state.accepted, m_state.rejected, result.diff, result.elapsed);
+        LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " MAGENTA_BOLD("GPU %zu %zu C")
+                            : "accepted (%" PRId64 "/%" PRId64 ") diff %u (%" PRIu64 " ms) GPU %zu %zu C",
+                 m_state.accepted, m_state.rejected, result.diff, result.elapsed, deviceId, health.temperature);
     }
 }
 

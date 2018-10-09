@@ -6,6 +6,7 @@
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2019 kimxilxyong <https://github.com/kimxilxyong/cn8cardsaver>, kimxilxyong@gmail.com
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -57,6 +58,7 @@ Client::Client(int id, const char *agent, IClientListener *listener) :
     m_extensions(0),
     m_id(id),
     m_retries(5),
+    m_maxtemp(75),
     m_retryPause(5000),
     m_failures(0),
     m_recvBufPos(0),
@@ -200,7 +202,7 @@ int64_t Client::submit(const JobResult &result)
 #   ifdef XMRIG_PROXY_PROJECT
     m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff(), result.id);
 #   else
-    m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff());
+    m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff(), 0, result.m_threadId);
 #   endif
 
     return send(doc);
@@ -251,7 +253,7 @@ bool Client::parseJob(const rapidjson::Value &params, int *code)
         *code = 2;
         return false;
     }
-
+    LOG_DEBUG("*********** parseJob %zu", m_id);
     Job job(m_id, m_nicehash, m_pool.algorithm(), m_rpcId);
 
     if (!job.setId(params["job_id"].GetString())) {
@@ -615,6 +617,8 @@ void Client::parseResponse(int64_t id, const rapidjson::Value &result, const rap
         auto it = m_results.find(id);
         if (it != m_results.end()) {
             it->second.done();
+            
+
             m_listener->onResultAccepted(this, it->second, message);
             m_results.erase(it);
         }

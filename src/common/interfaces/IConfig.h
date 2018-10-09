@@ -106,6 +106,7 @@ public:
         CudaLaunchKey     = 1204,
         CudaAffinityKey   = 1205,
         CudaMaxUsageKey   = 1206,
+        CudaMaxTempKey    = 1207,
     };
 
     virtual ~IConfig() {}

@@ -58,6 +58,7 @@ xmrig::CommonConfig::CommonConfig() :
     m_printTime(60),
     m_retries(5),
     m_retryPause(5),
+    m_maxtemp(75),
     m_state(NoneState)
 {
     m_pools.push_back(Pool());
@@ -259,6 +260,7 @@ bool xmrig::CommonConfig::parseString(int key, const char *arg)
     case RetryPauseKey:  /* --retry-pause */
     case ApiPort:        /* --api-port */
     case PrintTimeKey:   /* --cpu-priority */
+    case CudaMaxTempKey:
         return parseUint64(key, strtol(arg, nullptr, 10));
 
     case BackgroundKey: /* --background */
@@ -306,6 +308,12 @@ void xmrig::CommonConfig::setFileName(const char *fileName)
 bool xmrig::CommonConfig::parseInt(int key, int arg)
 {
     switch (key) {
+    case CudaMaxTempKey:
+        if (arg > 0 && arg <= 200) {
+            m_maxtemp = arg;           
+        }
+        break;
+
     case RetriesKey: /* --retries */
         if (arg > 0 && arg <= 1000) {
             m_retries = arg;

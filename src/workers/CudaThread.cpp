@@ -56,6 +56,7 @@ CudaThread::CudaThread(const nvid_ctx &ctx, int64_t affinity, xmrig::Algo algori
     m_bfactor(ctx.device_bfactor),
     m_blocks(ctx.device_blocks),
     m_bsleep(ctx.device_bsleep),
+    m_maxtemp(ctx.device_maxtemp),
     m_clockRate(ctx.device_clockRate),
     m_memoryClockRate(ctx.device_memoryClockRate),
     m_nvmlId(-1),
@@ -126,6 +127,7 @@ bool CudaThread::init(xmrig::Algo algorithm)
     ctx.device_threads = m_threads;
     ctx.device_bfactor = m_bfactor;
     ctx.device_bsleep  = m_bsleep;
+    ctx.device_maxtemp  = m_maxtemp;
     ctx.syncMode       = m_syncMode;
 
     if (cuda_get_deviceinfo(&ctx, algorithm) != 0) {

@@ -41,7 +41,7 @@ class Url;
 class FailoverStrategy : public IStrategy, public IClientListener
 {
 public:
-    FailoverStrategy(const std::vector<Pool> &urls, int retryPause, int retries, IStrategyListener *listener, bool quiet = false);
+    FailoverStrategy(const std::vector<Pool> &urls, int retryPause, int retries, int maxtemp, IStrategyListener *listener, bool quiet = false);
     ~FailoverStrategy();
 
 public:
@@ -64,6 +64,7 @@ private:
 
     const bool m_quiet;
     const int m_retries;
+    const int m_maxtemp;
     const int m_retryPause;
     int m_active;
     int m_index;

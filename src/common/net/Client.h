@@ -77,6 +77,7 @@ public:
     inline void setAlgo(const xmrig::Algorithm &algo) { m_pool.setAlgo(algo); }
     inline void setQuiet(bool quiet)                  { m_quiet = quiet; }
     inline void setRetries(int retries)               { m_retries = retries; }
+    inline void setMaxTemp(int maxtemp)               { m_maxtemp = maxtemp; }
     inline void setRetryPause(int ms)                 { m_retryPause = ms; }
 
 private:
@@ -128,6 +129,7 @@ private:
     int m_extensions;
     int m_id;
     int m_retries;
+    int m_maxtemp;
     int m_retryPause;
     int64_t m_failures;
     Job m_job;

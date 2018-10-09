@@ -55,6 +55,7 @@ public:
     inline const xmrig::Id &id() const                { return m_id; }
     inline int poolId() const                         { return m_poolId; }
     inline int threadId() const                       { return m_threadId; }
+    inline int deviceId() const                       { return m_deviceId; }
     inline size_t size() const                        { return m_size; }
     inline uint32_t *nonce()                          { return reinterpret_cast<uint32_t*>(m_blob + 39); }
     inline uint32_t diff() const                      { return static_cast<uint32_t>(m_diff); }
@@ -63,6 +64,7 @@ public:
     inline void setClientId(const xmrig::Id &id)      { m_clientId = id; }
     inline void setPoolId(int poolId)                 { m_poolId = poolId; }
     inline void setThreadId(int threadId)             { m_threadId = threadId; }
+    inline void setDeviceId(int deviceId)             { m_deviceId = deviceId; }
     inline xmrig::Algorithm &algorithm()              { return m_algorithm; }
 
 #   ifdef XMRIG_PROXY_PROJECT
@@ -86,6 +88,7 @@ private:
     bool m_nicehash;
     int m_poolId;
     int m_threadId;
+    int m_deviceId;
     size_t m_size;
     uint64_t m_diff;
     uint64_t m_target;

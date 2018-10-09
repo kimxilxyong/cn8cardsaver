@@ -59,6 +59,7 @@ public:
     inline int printTime() const                   { return m_printTime; }
     inline int retries() const                     { return m_retries; }
     inline int retryPause() const                  { return m_retryPause; }
+    inline int maxtemp() const                     { return m_maxtemp; } 
     inline void setColors(bool colors)             { m_colors = colors; }
 
     inline bool isWatch() const override               { return m_watch && !m_fileName.isNull(); }
@@ -94,6 +95,7 @@ protected:
     int m_printTime;
     int m_retries;
     int m_retryPause;
+    int m_maxtemp;
     State m_state;
     std::vector<Pool> m_activePools;
     std::vector<Pool> m_pools;

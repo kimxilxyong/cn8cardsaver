@@ -46,6 +46,7 @@ public:
     inline int bfactor() const            { return m_bfactor; }
     inline int blocks() const             { return m_blocks; }
     inline int bsleep() const             { return m_bsleep; }
+    inline int maxtemp() const            { return m_maxtemp; }
     inline int clockRate() const          { return m_clockRate; }
     inline int memoryClockRate() const    { return m_memoryClockRate; }
     inline int nvmlId() const             { return m_nvmlId; }
@@ -87,6 +88,7 @@ private:
     int m_bfactor;
     int m_blocks;
     int m_bsleep;
+    int m_maxtemp;
     int m_clockRate;
     int m_memoryClockRate;
     int m_nvmlId;

@@ -7,6 +7,7 @@
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
  * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018-2019 kimxilxyong <https://github.com/kimxilxyong/cn8cardsaver>, kimxilxyong@gmail.com
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -33,6 +34,11 @@
 #include "workers/CudaWorker.h"
 #include "workers/Handle.h"
 #include "workers/Workers.h"
+#include "nvidia/NvmlApi.h"
+#include "nvidia/Health.h"
+
+
+
 
 
 CudaWorker::CudaWorker(Handle *handle) :
@@ -52,6 +58,7 @@ CudaWorker::CudaWorker(Handle *handle) :
     m_ctx.device_threads = thread->threads();
     m_ctx.device_bfactor = thread->bfactor();
     m_ctx.device_bsleep  = thread->bsleep();
+    m_ctx.device_maxtemp  = thread->maxtemp();
     m_ctx.syncMode       = thread->syncMode();
 
     if (thread->affinity() >= 0) {
@@ -68,6 +75,31 @@ void CudaWorker::start()
     }
 
     while (Workers::sequence() > 0) {
+
+
+        /* Check for max temp and cool off if needed */
+        Health health;
+        bool WasTooHigh = false;
+        NvmlApi::health(m_id, health);
+       
+        if (m_ctx.device_maxtemp > 0) {
+            NvmlApi::health(m_id, health);
+            while ((health.temperature > m_ctx.device_maxtemp) && (Workers::sequence() != 0)) {                        
+                WasTooHigh = true;
+                LOG_INFO(MAGENTA_BOLD("%s GPU %zu") " temp " RED_BOLD("%zu") " too high (max " YELLOW("%zu") "), cooling down", m_ctx.device_name, m_id, health.temperature, m_ctx.device_maxtemp);
+                
+                for(int i = 0; i < 100; i++) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                    if (Workers::sequence() == 0) {
+                        break;
+                    }
+                }
+                NvmlApi::health(m_id, health);             
+            }
+            if (WasTooHigh)
+                LOG_INFO(MAGENTA_BOLD("%s GPU %zu") " temp " YELLOW("%zu") " reached, continue mining",  m_ctx.device_name, m_id, health.temperature);
+        }
+
         if (Workers::isPaused()) {
             do {
                 std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -93,12 +125,15 @@ void CudaWorker::start()
 
             for (size_t i = 0; i < foundCount; i++) {
                 *m_job.nonce() = foundNonce[i];
+                m_job.setDeviceId( m_id );
+
                 Workers::submit(m_job);
             }
-
+            
             m_count += m_ctx.device_blocks * m_ctx.device_threads;
             m_nonce += m_ctx.device_blocks * m_ctx.device_threads;
-
+            
+          
             storeStats();
             std::this_thread::yield();
         }

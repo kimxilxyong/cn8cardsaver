@@ -158,6 +158,17 @@ static void print_commands(xmrig::Config *config)
 }
 
 
+static void print_maxtemp(xmrig::Config *config)
+{
+    if (config->isColors()) {
+        Log::i()->text(GREEN_BOLD(" * ") WHITE_BOLD("MAX TEMP     ") YELLOW("%zu") WHITE_BOLD(" Celsius"),config->maxtemp());
+    }
+    else {
+        Log::i()->text(" * MAX TEMP     %zu", config->maxtemp());
+    }
+    
+}
+
 void Summary::print(xmrig::Controller *controller)
 {
     print_versions(controller->config());
@@ -171,6 +182,7 @@ void Summary::print(xmrig::Controller *controller)
 #   endif
 
     print_commands(controller->config());
+    print_maxtemp(controller->config());
 }
 
 

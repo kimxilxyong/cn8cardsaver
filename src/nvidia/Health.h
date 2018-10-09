@@ -42,11 +42,11 @@ public:
 
     inline void reset()
     {
-        temperature = 0;
-        power       = 0;
-        fanSpeed    = 0;
-        clock       = 0;
-        memClock    = 0;
+        temperature    = 0;
+        power          = 0;
+        fanSpeed       = 0;
+        clock          = 0;
+        memClock       = 0;
     }
 
 

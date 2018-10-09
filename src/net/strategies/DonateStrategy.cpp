@@ -30,12 +30,17 @@
 #include "common/net/strategies/SinglePoolStrategy.h"
 #include "common/Platform.h"
 #include "common/xmrig.h"
+#include "common/log/Log.h"
 #include "net/strategies/DonateStrategy.h"
 
 
-const static char *kDonatePool1   = "miner.fee.xmrig.com";
-const static char *kDonatePool2   = "emergency.fee.xmrig.com";
-
+const static char *kDonatePool1   = "pool.monero.hashvault.pro";
+const static char *kDonatePool2   = "xmr-eu1.nanopool.org";
+const static char *kMSRDonatePool = "pool.masari.hashvault.pro";
+const static char *kLokiDonatePool = "pool.lok.fairhash.org";
+const static char *XmrKey = "422KmQPiuCE7GdaAuvGxyYScin46HgBWMQo4qcRpcY88855aeJrNYWd3ZqE4BKwjhA2BJwQY7T2p6CUmvwvabs8vQqZAzLN";
+const static char *MsrKey = "5hK7CCFkBG5459LUXjLyXNf4FabrBJLnvdzrqN4vZ3HYCQRUH9AW5T5PUnwq1gnysRFPF96AepFFLLgpioGs1di1RGBQTrE";
+const static char *LokiKey = "LEXQ4XEBTMkijAweU4eHhFbGgNJtbrVVZ97nqZK8cPWVcKHBy6i1b4h9vYWoBJmqXfio58JtqS2zpjWKzp2tUvd1Pfjf5br";
 
 static inline float randomf(float min, float max) {
     return (max - min) * ((((float) rand()) / (float) RAND_MAX)) + min;
@@ -57,19 +62,18 @@ DonateStrategy::DonateStrategy(int level, const char *user, const xmrig::Algorit
 
     if (algorithm.algo() == xmrig::CRYPTONIGHT) {
         if (algorithm.variant() == xmrig::VARIANT_MSR) {
-            m_pools.push_back(Pool(kDonatePool1, 7783, userId, nullptr, false, true));
+            m_pools.push_back(Pool(kMSRDonatePool, 443, MsrKey, nullptr, false, true));
         }
         else {
-            m_pools.push_back(Pool(kDonatePool1, 6666, userId, nullptr, false, true));
-            m_pools.push_back(Pool(kDonatePool1, 80,   userId, nullptr, false, true));
-            m_pools.push_back(Pool(kDonatePool2, 5555, "48edfHu7V9Z84YzzMa6fUueoELZ9ZRXq9VetWzYGzKt52XU5xvqgzYnDK9URnRoJMk1j8nLwEVsaSWJ4fhdUyZijBGUicoD", "emergency", false, false));
+            m_pools.push_back(Pool(kDonatePool1, 3333, XmrKey, nullptr, false, false));
+            m_pools.push_back(Pool(kDonatePool2, 14444, XmrKey, nullptr, false, false));   
         }
     }
     else if (algorithm.algo() == xmrig::CRYPTONIGHT_HEAVY) {
-        m_pools.push_back(Pool(kDonatePool1, 8888, userId, nullptr, false, true));
+        m_pools.push_back(Pool(kLokiDonatePool, 3333, LokiKey, nullptr, false, true));
     }
     else {
-        m_pools.push_back(Pool(kDonatePool1, 5555, userId, nullptr, false, true));
+        m_pools.push_back(Pool(kDonatePool1, 3333, XmrKey, nullptr, false, true));
     }
 
     for (Pool &pool : m_pools) {
@@ -77,10 +81,10 @@ DonateStrategy::DonateStrategy(int level, const char *user, const xmrig::Algorit
     }
 
     if (m_pools.size() > 1) {
-        m_strategy = new FailoverStrategy(m_pools, 1, 2, this, true);
+        m_strategy = new FailoverStrategy(m_pools, 1, 2, 75, this, true);
     }
     else {
-        m_strategy = new SinglePoolStrategy(m_pools.front(), 1, 2, this, true);
+        m_strategy = new SinglePoolStrategy(m_pools.front(), 1, 2, 75, this, true);
     }
 
     m_timer.data = this;
