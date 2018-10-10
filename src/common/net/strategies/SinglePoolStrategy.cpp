@@ -29,7 +29,7 @@
 #include "common/log/Log.h"
 
 
-SinglePoolStrategy::SinglePoolStrategy(const Pool &pool, int retryPause, int retries, int maxtemp, IStrategyListener *listener, bool quiet) :
+SinglePoolStrategy::SinglePoolStrategy(const Pool &pool, int retryPause, int retries, int maxtemp, int maxfallofftemp, IStrategyListener *listener, bool quiet) :
     m_active(false),
     m_listener(listener)
 {
@@ -37,8 +37,11 @@ SinglePoolStrategy::SinglePoolStrategy(const Pool &pool, int retryPause, int ret
     m_client->setPool(pool);
     m_client->setRetries(retries);
     m_client->setMaxTemp(maxtemp);
+    m_client->setMaxfallofftemp(maxfallofftemp);
     m_client->setRetryPause(retryPause * 1000);
     m_client->setQuiet(quiet);
+
+    LOG_DEBUG("********** maxfallofftemp %zu", maxfallofftemp);
 }
 
 

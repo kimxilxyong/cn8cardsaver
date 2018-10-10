@@ -47,6 +47,7 @@ public:
     inline int blocks() const             { return m_blocks; }
     inline int bsleep() const             { return m_bsleep; }
     inline int maxtemp() const            { return m_maxtemp; }
+    inline int maxfallofftemp() const     { return m_maxfallofftemp; }
     inline int clockRate() const          { return m_clockRate; }
     inline int memoryClockRate() const    { return m_memoryClockRate; }
     inline int nvmlId() const             { return m_nvmlId; }
@@ -89,6 +90,7 @@ private:
     int m_blocks;
     int m_bsleep;
     int m_maxtemp;
+    int m_maxfallofftemp;
     int m_clockRate;
     int m_memoryClockRate;
     int m_nvmlId;

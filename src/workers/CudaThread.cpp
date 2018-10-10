@@ -27,12 +27,15 @@
 
 #include "rapidjson/document.h"
 #include "workers/CudaThread.h"
+#include "common/log/Log.h"
 
 
 CudaThread::CudaThread() :
     m_bfactor(0),
     m_blocks(0),
     m_bsleep(0),
+    m_maxtemp(75),
+    m_maxfallofftemp(10),
     m_clockRate(0),
     m_memoryClockRate(0),
     m_nvmlId(-1),
@@ -57,6 +60,7 @@ CudaThread::CudaThread(const nvid_ctx &ctx, int64_t affinity, xmrig::Algo algori
     m_blocks(ctx.device_blocks),
     m_bsleep(ctx.device_bsleep),
     m_maxtemp(ctx.device_maxtemp),
+    m_maxfallofftemp(ctx.device_maxfallofftemp),
     m_clockRate(ctx.device_clockRate),
     m_memoryClockRate(ctx.device_memoryClockRate),
     m_nvmlId(-1),
@@ -73,6 +77,7 @@ CudaThread::CudaThread(const nvid_ctx &ctx, int64_t affinity, xmrig::Algo algori
 {
     memcpy(m_arch, ctx.device_arch, sizeof(m_arch));
     strncpy(m_name, ctx.device_name, sizeof(m_name) - 1);
+    LOG_DEBUG("******** m_maxfallofftemp(ctx.device_maxfallofftemp) %zu", m_maxfallofftemp);
 }
 
 
@@ -127,7 +132,8 @@ bool CudaThread::init(xmrig::Algo algorithm)
     ctx.device_threads = m_threads;
     ctx.device_bfactor = m_bfactor;
     ctx.device_bsleep  = m_bsleep;
-    ctx.device_maxtemp  = m_maxtemp;
+    ctx.device_maxtemp = m_maxtemp;
+    ctx.device_maxfallofftemp  = m_maxfallofftemp;
     ctx.syncMode       = m_syncMode;
 
     if (cuda_get_deviceinfo(&ctx, algorithm) != 0) {

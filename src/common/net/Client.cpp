@@ -59,6 +59,7 @@ Client::Client(int id, const char *agent, IClientListener *listener) :
     m_id(id),
     m_retries(5),
     m_maxtemp(75),
+    m_maxfallofftemp(10),
     m_retryPause(5000),
     m_failures(0),
     m_recvBufPos(0),
@@ -202,7 +203,7 @@ int64_t Client::submit(const JobResult &result)
 #   ifdef XMRIG_PROXY_PROJECT
     m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff(), result.id);
 #   else
-    m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff(), 0, result.m_threadId);
+    m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff(), 0, result.deviceId );
 #   endif
 
     return send(doc);
@@ -253,7 +254,7 @@ bool Client::parseJob(const rapidjson::Value &params, int *code)
         *code = 2;
         return false;
     }
-    LOG_DEBUG("*********** parseJob %zu", m_id);
+    
     Job job(m_id, m_nicehash, m_pool.algorithm(), m_rpcId);
 
     if (!job.setId(params["job_id"].GetString())) {

@@ -44,6 +44,7 @@
 
 bool Workers::m_active = false;
 bool Workers::m_enabled = true;
+bool Workers::m_TempWasTooHigh = false;
 Hashrate *Workers::m_hashrate = nullptr;
 IJobResultListener *Workers::m_listener = nullptr;
 Job Workers::m_job;
@@ -316,7 +317,7 @@ void Workers::onResult(uv_async_t *)
                 JobResult result(job);
 
                 if (CryptoNight::hash(job, result, ctx)) {
-                    result.m_threadId = job.threadId();
+                    result.deviceId = job.deviceId();
                     baton->results.push_back(result);
                     LOG_DEBUG("********** CryptoNight::hash %zu", job.threadId() );
 

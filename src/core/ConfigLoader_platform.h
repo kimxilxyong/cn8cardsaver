@@ -69,6 +69,7 @@ Options:\n\
       --cuda-bsleep=N       insert a delay of N microseconds between kernel launches\n\
       --cuda-affinity=N     affine GPU threads to a CPU\n\
       --max-gpu-temp        Maximum temperature a GPU may reach before its cooled down (default 75)\n\
+      --gpu-temp-falloff    Amount of temperature to cool off before mining starts again (default 10)\n\
       --no-color            disable colored output\n\
       --variant             algorithm PoW variant\n\
       --donate-level=N      donate level, default 5%% (5 minutes in 100 minutes)\n\
@@ -135,6 +136,7 @@ static struct option const options[] = {
     { "rig-id",            1, nullptr, xmrig::IConfig::RigIdKey          },
     { "version",           0, nullptr, xmrig::IConfig::VersionKey        },
     { "max-gpu-temp",      1, nullptr, xmrig::IConfig::CudaMaxTempKey    },
+    { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::CudaTempFalloffKey},
     { nullptr,             0, nullptr, 0                                 }
 };
 
@@ -159,6 +161,7 @@ static struct option const config_options[] = {
     { "max-gpu-threads",   1, nullptr, xmrig::IConfig::CudaMaxThreadsKey }, // deprecated, use --cuda-max-threads instead.
     { "max-gpu-usage",     1, nullptr, xmrig::IConfig::CudaMaxUsageKey   }, // deprecated.
     { "max-gpu-temp",      1, nullptr, xmrig::IConfig::CudaMaxTempKey    },
+    { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::CudaTempFalloffKey},
     { nullptr,             0, nullptr, 0                                 }
 };
 

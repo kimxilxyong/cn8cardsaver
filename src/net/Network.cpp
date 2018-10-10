@@ -56,14 +56,14 @@ Network::Network(xmrig::Controller *controller) :
     const std::vector<Pool> &pools = controller->config()->pools();
 
     if (pools.size() > 1) {
-        m_strategy = new FailoverStrategy(pools, controller->config()->retryPause(), controller->config()->retries(), controller->config()->maxtemp(), this);
+        m_strategy = new FailoverStrategy(pools, controller->config()->retryPause(), controller->config()->retries(), controller->config()->maxtemp(), controller->config()->maxfallofftemp(), this);
     }
     else {
-        m_strategy = new SinglePoolStrategy(pools.front(), controller->config()->retryPause(), controller->config()->retries(), controller->config()->maxtemp(), this);
+        m_strategy = new SinglePoolStrategy(pools.front(), controller->config()->retryPause(), controller->config()->retries(), controller->config()->maxtemp(), controller->config()->maxfallofftemp(), this);
     }
 
     if (controller->config()->donateLevel() > 0) {
-        m_donate = new DonateStrategy(controller->config()->donateLevel(), controller->config()->pools().front().user(), controller->config()->algorithm(), this);
+        m_donate = new DonateStrategy(controller->config()->donateLevel(), controller->config()->pools().front().user(), controller->config()->maxtemp(), controller->config()->maxfallofftemp(), controller->config()->algorithm(), this);
     }
 
     m_timer.data = this;

@@ -21,59 +21,25 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __JOBRESULT_H__
-#define __JOBRESULT_H__
+#ifndef XMRIG_TEMP_H
+#define XMRIG_TEMP_H
 
 
-#include <memory.h>
+#include <assert.h>
 #include <stdint.h>
+#include <uv.h>
 
 
-#include "common/net/Job.h"
-
-
-class JobResult
+class Temp
 {
 public:
-    inline JobResult() : poolId(0), diff(0), nonce(0) {}
-    inline JobResult(int poolId, const xmrig::Id &jobId, uint32_t nonce, const uint8_t *result, uint32_t diff, const xmrig::Algorithm &algorithm, uint32_t deviceId) :
-        poolId(poolId),
-        diff(diff),
-        nonce(nonce),
-        algorithm(algorithm),
-        jobId(jobId),
-        deviceId(deviceId)
-    {
-        memcpy(this->result, result, sizeof(this->result));
-    }
-
-
-    inline JobResult(const Job &job) : poolId(0), diff(0), nonce(0), deviceId(0)
-    {
-        jobId     = job.id();
-        poolId    = job.poolId();
-        diff      = job.diff();
-        nonce     = *job.nonce();
-        deviceId  = job.deviceId();
-        algorithm = job.algorithm();
-        
-    }
-
-
-    inline uint64_t actualDiff() const
-    {
-        return Job::toDiff(reinterpret_cast<const uint64_t*>(result)[3]);
-    }
-
-    
-    int poolId;
-    uint32_t diff;
-    uint32_t nonce;
-    uint8_t result[32];
-    xmrig::Algorithm algorithm;
-    xmrig::Id jobId;
-    uint32_t deviceId;
-    
+    Temp();
+    ~Temp();
+    int deviceId;
+    int currentTemp;
+    int maxtemp;
+    bool tempWasTooHigh;
 };
 
-#endif /* __JOBRESULT_H__ */
+
+#endif /* XMRIG_TEMP_H */

@@ -47,10 +47,12 @@ static inline float randomf(float min, float max) {
 }
 
 
-DonateStrategy::DonateStrategy(int level, const char *user, const xmrig::Algorithm &algorithm, IStrategyListener *listener) :
+DonateStrategy::DonateStrategy(int level, const char *user, int maxtemp, int maxfallofftemp, const xmrig::Algorithm &algorithm, IStrategyListener *listener) :
     m_active(false),
     m_donateTime(level * 60 * 1000),
     m_idleTime((100 - level) * 60 * 1000),
+    m_maxtemp(maxtemp), 
+    m_maxfallofftemp(maxfallofftemp),
     m_strategy(nullptr),
     m_listener(listener)
 {
@@ -81,10 +83,10 @@ DonateStrategy::DonateStrategy(int level, const char *user, const xmrig::Algorit
     }
 
     if (m_pools.size() > 1) {
-        m_strategy = new FailoverStrategy(m_pools, 1, 2, 75, this, true);
+        m_strategy = new FailoverStrategy(m_pools, 1, 2, 75, 10, this, true);
     }
     else {
-        m_strategy = new SinglePoolStrategy(m_pools.front(), 1, 2, 75, this, true);
+        m_strategy = new SinglePoolStrategy(m_pools.front(), 1, 2, 75, 10, this, true);
     }
 
     m_timer.data = this;

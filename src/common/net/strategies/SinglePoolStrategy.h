@@ -37,7 +37,7 @@ class Url;
 class SinglePoolStrategy : public IStrategy, public IClientListener
 {
 public:
-    SinglePoolStrategy(const Pool &pool, int retryPause, int retries, int maxtemp, IStrategyListener *listener, bool quiet = false);
+    SinglePoolStrategy(const Pool &pool, int retryPause, int retries, int maxtemp, int maxfallofftemp, IStrategyListener *listener, bool quiet = false);
     ~SinglePoolStrategy();
 
 public:

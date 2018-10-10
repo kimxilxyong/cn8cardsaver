@@ -59,6 +59,7 @@ xmrig::CommonConfig::CommonConfig() :
     m_retries(5),
     m_retryPause(5),
     m_maxtemp(75),
+    m_maxfallofftemp(10),
     m_state(NoneState)
 {
     m_pools.push_back(Pool());
@@ -261,7 +262,9 @@ bool xmrig::CommonConfig::parseString(int key, const char *arg)
     case ApiPort:        /* --api-port */
     case PrintTimeKey:   /* --cpu-priority */
     case CudaMaxTempKey:
+    case CudaTempFalloffKey:
         return parseUint64(key, strtol(arg, nullptr, 10));
+        break;
 
     case BackgroundKey: /* --background */
     case SyslogKey:     /* --syslog */
@@ -308,6 +311,12 @@ void xmrig::CommonConfig::setFileName(const char *fileName)
 bool xmrig::CommonConfig::parseInt(int key, int arg)
 {
     switch (key) {
+    case CudaTempFalloffKey:
+        if (arg > 0 && arg <= 200) {
+            m_maxfallofftemp = arg;           
+        }
+        break;
+
     case CudaMaxTempKey:
         if (arg > 0 && arg <= 200) {
             m_maxtemp = arg;           

@@ -64,6 +64,7 @@ set(HEADERS
     src/workers/Handle.h
     src/workers/Hashrate.h
     src/workers/Workers.h
+    src/workers/Temp.h
    )
 
 set(HEADERS_CRYPTO
@@ -118,6 +119,7 @@ set(SOURCES
     src/workers/Handle.cpp
     src/workers/Hashrate.cpp
     src/workers/Workers.cpp
+    src/workers/Temp.cpp
     src/xmrig.cpp
    )
 

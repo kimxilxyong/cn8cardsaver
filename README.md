@@ -28,7 +28,7 @@ GPU mining part based on [psychocrypt](https://github.com/psychocrypt) code used
 * CryptoNight-Lite support for AEON.
 * Automatic GPU configuration.
 * GPU health monitoring (clocks, power, temperature, fan speed) 
-* GPU temperature management (option --max-gpu-temp)
+* GPU temperature management (option --max-gpu-temp, --gpu-temp-falloff)
 * Nicehash support.
 * It's open source software.
 
@@ -57,6 +57,7 @@ Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or sha
       --cuda-bsleep=N       insert a delay of N microseconds between kernel launches
       --cuda-affinity=N     affine GPU threads to a CPU
       --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
+      --gpu-temp-falloff    Amount of temperature to cool off before mining starts again (default 10)
       --no-color            disable colored output
       --donate-level=N      donate level, default 5% (5 minutes in 100 minutes)
       --user-agent          set custom user-agent string for pool

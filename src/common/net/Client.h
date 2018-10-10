@@ -78,6 +78,7 @@ public:
     inline void setQuiet(bool quiet)                  { m_quiet = quiet; }
     inline void setRetries(int retries)               { m_retries = retries; }
     inline void setMaxTemp(int maxtemp)               { m_maxtemp = maxtemp; }
+    inline void setMaxfallofftemp(int maxfallofftemp) { m_maxfallofftemp = maxfallofftemp; }
     inline void setRetryPause(int ms)                 { m_retryPause = ms; }
 
 private:
@@ -130,6 +131,7 @@ private:
     int m_id;
     int m_retries;
     int m_maxtemp;
+    int m_maxfallofftemp;
     int m_retryPause;
     int64_t m_failures;
     Job m_job;

@@ -29,6 +29,7 @@
 
 
 #include "common/xmrig.h"
+#include "common/log/Log.h"
 
 
 namespace xmrig {
@@ -53,6 +54,7 @@ public:
     inline void parseBFactor(const char *arg)  { parse(m_bfactors, arg); }
     inline void parseBSleep(const char *arg)   { parse(m_bsleeps, arg); }
     inline void parseMaxTemp(const char *arg)  { parse(m_maxtemp, arg); }
+    inline void parseMaxFalloffTemp(const char *arg)  { parse(m_maxfallofftemp, arg); }
 
     inline int bfactor(int index = 0) const
     {
@@ -80,7 +82,14 @@ public:
         return get(m_maxtemp, index, 0);
 #       endif
     }
-
+    inline int maxfallofftemp(int index = 0) const
+    {
+#       ifdef _WIN32
+        return get(m_maxfallofftemp, index, 25);
+#       else
+        return get(m_maxfallofftemp, index, 0);
+#       endif
+    }
 
 private:
     inline int affinity(int index) const { return get(m_affinity, index, -1); }
@@ -97,6 +106,7 @@ private:
     std::vector<int> m_blocks;
     std::vector<int> m_bsleeps;
     std::vector<int> m_maxtemp;
+    std::vector<int> m_maxfallofftemp;
     std::vector<int> m_devices;
     std::vector<int> m_threads;
 };

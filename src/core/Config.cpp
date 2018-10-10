@@ -77,6 +77,10 @@ void xmrig::Config::getJSON(rapidjson::Document &doc) const
     doc.AddMember("cuda-bfactor",     m_cudaCLI.bfactor(), allocator);
     doc.AddMember("cuda-bsleep",      m_cudaCLI.bsleep(), allocator);
     doc.AddMember("max-gpu-temp",     m_cudaCLI.maxtemp(), allocator);
+    doc.AddMember("gpu-temp-falloff", m_cudaCLI.maxfallofftemp(), allocator);
+
+    LOG_INFO("******** m_cudaCLI.maxfallofftemp() %zu", m_cudaCLI.maxfallofftemp());
+
     doc.AddMember("cuda-max-threads", m_maxGpuThreads, allocator);
     doc.AddMember("donate-level",     donateLevel(), allocator);
     doc.AddMember("log-file",         logFile() ? Value(StringRef(logFile())).Move() : Value(kNullType).Move(), allocator);
@@ -153,6 +157,9 @@ bool xmrig::Config::parseString(int key, const char *arg)
 
     case CudaMaxTempKey: /* Max temp per gpu */        
         m_cudaCLI.parseMaxTemp(arg);
+        break;
+    case CudaTempFalloffKey:
+        m_cudaCLI.parseMaxFalloffTemp(arg);
         break;
 
     case CudaDevicesKey: /* --cuda-devices */

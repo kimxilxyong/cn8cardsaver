@@ -43,6 +43,7 @@ typedef struct {
     int device_clockRate;
     int device_memoryClockRate;
     uint32_t device_maxtemp;
+    uint32_t device_maxfallofftemp;
     uint32_t device_pciBusID;
     uint32_t device_pciDeviceID;
     uint32_t device_pciDomainID;

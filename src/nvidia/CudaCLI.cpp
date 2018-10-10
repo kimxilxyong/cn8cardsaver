@@ -30,6 +30,7 @@
 #include "nvidia/CudaCLI.h"
 #include "nvidia/cryptonight.h"
 #include "workers/CudaThread.h"
+#include "common/log/Log.h"
 
 
 CudaCLI::CudaCLI() :
@@ -58,6 +59,7 @@ bool CudaCLI::setup(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo)
         ctx.device_bfactor = bfactor(i);
         ctx.device_bsleep  = bsleep(i);
         ctx.device_maxtemp  = maxtemp(i);
+        ctx.device_maxfallofftemp  = maxfallofftemp(i);
 
         ctx.syncMode       = 3;
 
@@ -86,6 +88,7 @@ void CudaCLI::autoConf(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo)
         ctx.device_bfactor = bfactor();
         ctx.device_bsleep  = bsleep();
         ctx.device_maxtemp  = maxtemp();
+        ctx.device_maxfallofftemp  = maxfallofftemp();
         ctx.syncMode       = 3;
 
         if (cuda_get_deviceinfo(&ctx, algo) != 0) {

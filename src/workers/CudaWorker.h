@@ -42,6 +42,7 @@ class CudaWorker : public IWorker
 {
 public:
     CudaWorker(Handle *handle);
+    ~CudaWorker();
 
 protected:
     inline uint64_t hashCount() const override { return m_hashCount.load(std::memory_order_relaxed); }
