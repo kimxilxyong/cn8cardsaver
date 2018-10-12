@@ -39,8 +39,8 @@
 #include "nvidia/Health.h"
 
 
-std::map<int, Temp *> temps;
-std::map<int, Temp *>::iterator it;
+std::map<size_t, Temp *> temps;
+std::map<size_t, Temp *>::iterator it;
 
 
 CudaWorker::CudaWorker(Handle *handle) :
@@ -95,17 +95,17 @@ void CudaWorker::start()
         /* Check for max temp and cool off if needed */       
         if (m_ctx.device_maxtemp > 0) {
             Health health;        
-            NvmlApi::health(m_ctx.device_id, health);  
+            NvmlApi::temp(m_id, health);
 
-            it = temps.find(m_ctx.device_id);
+            it = temps.find(m_id);
             if (it == temps.end()) {
                 Temp * temp = new Temp;
                 temp->currentTemp = health.temperature;
-                temp->deviceId = m_ctx.device_id;
+                temp->deviceId = m_id;
                 temp->maxtemp = m_ctx.device_maxtemp;
-                temps[m_ctx.device_id] = temp;
-                LOG_DEBUG("******* health.temperature %zu gpu %zu", health.temperature, m_ctx.device_id);
-                LOG_DEBUG("******* temps.size %zu", temps.size());
+                temps[m_id] = temp;
+				LOG_DEBUG("******* health.temperature %zu gpu %zu", health.temperature, m_id);
+				LOG_DEBUG("******* temps.size %zu", temps.size());
 
             }
 
@@ -114,23 +114,28 @@ void CudaWorker::start()
                 //LOG_INFO("******* health.temperature %zu", health.temperature);
                 //LOG_INFO("******* temps.size %zu", temps.size());
 
-                if (temps[m_ctx.device_id]->tempWasTooHigh != true) {
-                    LOG_INFO(MAGENTA_BOLD("%s GPU %zu") " temp " RED_BOLD("%zu") " too high (max " YELLOW("%zu") "), cooling down", m_ctx.device_name, m_ctx.device_id, health.temperature, m_ctx.device_maxtemp);
+                if (temps[m_id]->tempWasTooHigh != true) {
+                    LOG_INFO(MAGENTA_BOLD("%s GPU %zu") " temp " RED_BOLD("%u") " too high (max " YELLOW("%d") "), cooling down", m_ctx.device_name, m_id, health.temperature, m_ctx.device_maxtemp);
                 }
-                temps[m_ctx.device_id]->tempWasTooHigh = true;
+                temps[m_id]->tempWasTooHigh = true;
                 for(int i = 0; i < 5; i++) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
                     if (Workers::sequence() == 0) {
                         break;
                     }
                 }
-                NvmlApi::health(m_ctx.device_id, health);             
+                NvmlApi::temp(m_id, health);
                 bDoWork = false;
             }
             
             if ((temps[m_ctx.device_id]->tempWasTooHigh) && (health.temperature < m_ctx.device_maxtemp - m_ctx.device_maxfallofftemp)) { // - GpuTempDiff
-                    LOG_INFO(MAGENTA_BOLD("%s GPU %zu") " temp " YELLOW("%zu") " reached (max " YELLOW("%zu - %zu") "), continue mining",  m_ctx.device_name, m_ctx.device_id, health.temperature, m_ctx.device_maxtemp, m_ctx.device_maxfallofftemp);
-                    temps[m_ctx.device_id]->tempWasTooHigh = false;
+                    
+				LOG_DEBUG("******* health.temperature %zu gpu %zu", health.temperature, m_id);
+				LOG_DEBUG("******* temps.size %zu", temps.size());
+				LOG_DEBUG("******* device_maxtemp %zu gpu %zu", m_ctx.device_maxtemp, m_id);
+								
+				LOG_INFO(MAGENTA_BOLD("%s GPU %zu") " temp " YELLOW("%u") " reached (max " YELLOW("%u - %u") "), continue mining",  m_ctx.device_name, m_ctx.device_id, health.temperature, m_ctx.device_maxtemp, m_ctx.device_maxfallofftemp);
+                    temps[m_id]->tempWasTooHigh = false;
                     bDoWork = true;
                 }
         }
@@ -178,7 +183,7 @@ void CudaWorker::start()
             consumeJob();
         }
         else {
-            LOG_DEBUG("******* Workers::sequence() %zu, m_ctx.device_maxtemp %zu, m_ctx.device_id %zu bDoWork %zu", Workers::sequence(), m_ctx.device_maxtemp, m_ctx.device_id, bDoWork);
+            LOG_DEBUG("******* Workers::sequence() %zu, m_ctx.device_maxtemp %zu, m_ctx.device_id %zu bDoWork %zu", Workers::sequence(), m_ctx.device_maxtemp, m_id, bDoWork);
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         }
     }
@@ -216,10 +221,10 @@ void CudaWorker::consumeJob()
     m_job.setThreadId(m_id);
 
     if (m_job.isNicehash()) {
-        m_nonce = (*m_job.nonce() & 0xff000000U) + (0xffffffU / m_threads * m_id);
+        m_nonce = (uint32_t)((*m_job.nonce() & 0xff000000U) + (0xffffffU / m_threads * m_id));
     }
     else {
-        m_nonce = 0xffffffffU / m_threads * m_id;
+        m_nonce = (uint32_t)(0xffffffffU / m_threads * m_id);
     }
 
     setJob();

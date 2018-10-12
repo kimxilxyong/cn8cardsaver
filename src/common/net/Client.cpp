@@ -619,7 +619,7 @@ void Client::parseResponse(int64_t id, const rapidjson::Value &result, const rap
         if (it != m_results.end()) {
             it->second.done();
             
-
+			LOG_DEBUG("***********it->second.threadId %zu", it->second.threadId);
             m_listener->onResultAccepted(this, it->second, message);
             m_results.erase(it);
         }
@@ -658,6 +658,7 @@ void Client::parseResponse(int64_t id, const rapidjson::Value &result, const rap
     auto it = m_results.find(id);
     if (it != m_results.end()) {
         it->second.done();
+		LOG_DEBUG("***********it->second.threadId ok %zu", it->second.threadId);
         m_listener->onResultAccepted(this, it->second, nullptr);
         m_results.erase(it);
     }

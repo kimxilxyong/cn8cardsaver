@@ -148,19 +148,22 @@ void Network::onResultAccepted(IStrategy *strategy, Client *client, const Submit
     m_state.add(result, error);
 
     Health health;
-    int deviceId = result.threadId;
+    uint32_t deviceId = result.threadId;
     LOG_DEBUG("********** onResultAccepted result.threadId %zu", deviceId );
     
-    NvmlApi::health(deviceId, health);
+	if (!NvmlApi::temp(deviceId, health)) {
+		LOG_ERR("NvmlApi::temp(deviceId, health)) Failed");
+	}
+	LOG_DEBUG("********** onResultAccepted result.threadId %zu temp %u", deviceId, health.temperature);
 
     if (error) {
-        LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " MAGENTA_BOLD("GPU %zu %zu C")
-                            : "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) GPU %zu %zu C",
+        LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " MAGENTA_BOLD("GPU %d" " %u" " C")
+                            : "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) GPU %d" " %u" " C",
                  m_state.accepted, m_state.rejected, result.diff, error, result.elapsed, deviceId, health.temperature);
     }
     else {
-        LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " MAGENTA_BOLD("GPU %zu %zu C")
-                            : "accepted (%" PRId64 "/%" PRId64 ") diff %u (%" PRIu64 " ms) GPU %zu %zu C",
+        LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " MAGENTA_BOLD("GPU %d" " %u" " C")
+                            : "accepted (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) GPU %d" " %u" " C",
                  m_state.accepted, m_state.rejected, result.diff, result.elapsed, deviceId, health.temperature);
     }
 }

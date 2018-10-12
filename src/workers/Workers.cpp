@@ -141,12 +141,13 @@ void Workers::printHealth()
     Health health;
     for (const xmrig::IThread *t : m_controller->config()->threads()) {
         auto thread = static_cast<const CudaThread *>(t);
-        //LOG_INFO("****** thread->nvmlId() GPU %zu temp %zu", thread->nvmlId(), health.temperature);
+        
         if (!NvmlApi::health(thread->nvmlId(), health)) {
             continue;
         }
-
-        const uint32_t temp = health.temperature;
+		LOG_INFO("****** thread->nvmlId() GPU %zu temp %zu", thread->nvmlId(), health.temperature);
+        
+		const uint32_t temp = health.temperature;
 
         if (health.clock && health.clock) {
             if (m_controller->config()->isColors()) {

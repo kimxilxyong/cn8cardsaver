@@ -35,7 +35,7 @@ class Temp
 public:
     Temp();
     ~Temp();
-    int deviceId;
+    size_t deviceId;
     int currentTemp;
     int maxtemp;
     bool tempWasTooHigh;
