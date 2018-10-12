@@ -174,6 +174,13 @@ void CudaThread::limit(int maxUsage, int maxThreads)
 }
 
 
+#ifdef APP_DEBUG
+void CudaThread::print() const
+{
+}
+#endif
+
+
 #ifndef XMRIG_NO_API
 rapidjson::Value CudaThread::toAPI(rapidjson::Document &doc) const
 {
