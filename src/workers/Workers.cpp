@@ -145,7 +145,7 @@ void Workers::printHealth()
         if (!NvmlApi::health(thread->nvmlId(), health)) {
             continue;
         }
-		LOG_INFO("****** thread->nvmlId() GPU %zu temp %zu", thread->nvmlId(), health.temperature);
+		LOG_DEBUG("****** thread->nvmlId() GPU %zu temp %zu", thread->nvmlId(), health.temperature);
         
 		const uint32_t temp = health.temperature;
 
