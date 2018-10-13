@@ -1,6 +1,6 @@
 # CN8CardSaver for NVIDIA GPUs
 
-:warning: **[Monero will change PoW algorithm on October 18](https://github.com/xmrig/xmrig/issues/753), all miners and proxy should be updated to [v1.0.2+](https://github.com/xmrig/xmrig-nvidia/releases/tag/v2.8.0-rc)** :warning:
+:warning: **[Monero will change PoW algorithm on October 18](https://github.com/xmrig/xmrig/issues/753), all miners should be updated to [v1.0.2+](https://github.com/kimxilxyong/cn8cardsaver/releases/tag/v1.0.2)** :warning:
 
 CN8CardSaver is a high performance Monero (XMR) NVIDIA miner forked from XMRig-nvidia.
 
@@ -14,7 +14,7 @@ Temperature control:
 ### Command line options
 ```
       --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
-      --gpu-temp-falloff    Amount of temperature to cool off before mining starts again (default 10)
+      --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
 ```
 
 #### Table of contents
@@ -69,7 +69,7 @@ Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or sha
       --cuda-bsleep=N       insert a delay of N microseconds between kernel launches
       --cuda-affinity=N     affine GPU threads to a CPU
       --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
-      --gpu-temp-falloff    Amount of temperature to cool off before mining starts again (default 10)
+      --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
       --no-color            disable colored output
       --variant             algorithm PoW variant
       --donate-level=N      donate level, default 5% (5 minutes in 100 minutes)
