@@ -47,7 +47,7 @@ static inline float randomf(float min, float max) {
 }
 
 
-DonateStrategy::DonateStrategy(int level, const char *user, int maxtemp, int maxfallofftemp, xmrig::Algo algo, IStrategyListener *listener) :
+DonateStrategy::DonateStrategy(int level, const char *user, int maxtemp, int maxfallofftemp, xmrig::Algo algo, xmrig::Variant variant, IStrategyListener *listener) :
     m_active(false),
     m_donateTime(level * 60 * 1000),
     m_idleTime((100 - level) * 60 * 1000),
@@ -62,8 +62,8 @@ DonateStrategy::DonateStrategy(int level, const char *user, int maxtemp, int max
     xmrig::keccak(reinterpret_cast<const uint8_t *>(user), strlen(user), hash);
     Job::toHex(hash, 32, userId);
 
-    if (algorithm.algo() == xmrig::CRYPTONIGHT) {
-        if (algorithm.variant() == xmrig::VARIANT_MSR) {
+    if (algo == xmrig::CRYPTONIGHT) {
+        if (variant == xmrig::VARIANT_MSR) {
             m_pools.push_back(Pool(kMSRDonatePool, 443, MsrKey, nullptr, false, true));
         }
         else {
@@ -71,7 +71,7 @@ DonateStrategy::DonateStrategy(int level, const char *user, int maxtemp, int max
             m_pools.push_back(Pool(kDonatePool2, 14444, XmrKey, nullptr, false, false));   
         }
     }
-    else if (algorithm.algo() == xmrig::CRYPTONIGHT_HEAVY) {
+    else if (algo == xmrig::CRYPTONIGHT_HEAVY) {
         m_pools.push_back(Pool(kLokiDonatePool, 3333, LokiKey, nullptr, false, true));
     }
     else {

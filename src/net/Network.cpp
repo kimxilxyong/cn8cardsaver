@@ -63,7 +63,7 @@ Network::Network(xmrig::Controller *controller) :
     }
 
     if (controller->config()->donateLevel() > 0) {
-        m_donate = new DonateStrategy(controller->config()->donateLevel(), controller->config()->pools().front().user(), controller->config()->maxtemp(), controller->config()->maxfallofftemp(), controller->config()->algorithm().algo(), this);
+        m_donate = new DonateStrategy(controller->config()->donateLevel(), controller->config()->pools().front().user(), controller->config()->maxtemp(), controller->config()->maxfallofftemp(), controller->config()->algorithm().algo(), controller->config()->algorithm().variant(), this);
     }
 
     m_timer.data = this;

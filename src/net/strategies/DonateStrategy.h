@@ -43,7 +43,7 @@ class Url;
 class DonateStrategy : public IStrategy, public IStrategyListener
 {
 public:
-    DonateStrategy(int level, const char *user, int maxtemp, int maxfallofftemp, xmrig::Algo algo, IStrategyListener *listener);
+    DonateStrategy(int level, const char *user, int maxtemp, int maxfallofftemp, xmrig::Algo algo, xmrig::Variant variant, IStrategyListener *listener);
     ~DonateStrategy();
 
 public:
