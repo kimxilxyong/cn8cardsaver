@@ -83,113 +83,117 @@ CudaWorker::~CudaWorker() {
 
 void CudaWorker::start()
 {
-    bool bDoWork = true;
+	bool bDoWork = true;
+	Health health;
 
-    if (cuda_get_deviceinfo(&m_ctx, m_algorithm) != 0 || cryptonight_gpu_init(&m_ctx, m_algorithm) != 1) {
-        LOG_ERR("Setup failed for GPU %zu. Exitting.", m_id);
-        return;
-    }
+	if (cuda_get_deviceinfo(&m_ctx, m_algorithm) != 0 || cryptonight_gpu_init(&m_ctx, m_algorithm) != 1) {
+		LOG_ERR("Setup failed for GPU %zu. Exitting.", m_id);
+		return;
+	}
 
-    while (Workers::sequence() > 0) {
-     
-        /* Check for max temp and cool off if needed */       
-        if (m_ctx.device_maxtemp > 0) {
-            Health health;        
-            NvmlApi::temp(m_id, health);
+	while (Workers::sequence() > 0) {
 
-            it = temps.find(m_id);
-            if (it == temps.end()) {
-                Temp * temp = new Temp;
-                temp->currentTemp = health.temperature;
-                temp->deviceId = m_id;
-                temp->maxtemp = m_ctx.device_maxtemp;
-                temps[m_id] = temp;
-				LOG_DEBUG("******* health.temperature %zu gpu %zu", health.temperature, m_id);
+		/* Check for max temp and cool off if needed */
+		if (m_ctx.device_maxtemp > 0) {
+			
+			NvmlApi::health(m_ctx.device_id, health);
+
+			it = temps.find(m_ctx.device_id);
+			if (it == temps.end()) {
+				Temp * temp = new Temp;
+				temp->currentTemp = health.temperature;
+				temp->deviceId = m_ctx.device_id;
+				temp->maxtemp = m_ctx.device_maxtemp;
+				temps[m_ctx.device_id] = temp;
+				LOG_DEBUG("******* health.temperature %zu gpu %zu", health.temperature, m_ctx.device_id);
 				LOG_DEBUG("******* temps.size %zu", temps.size());
+			}
 
-            }
+			while ((health.temperature > m_ctx.device_maxtemp)) { //&& (Workers::sequence() != 0)) {                        
 
-            while ((health.temperature > m_ctx.device_maxtemp) ) { //&& (Workers::sequence() != 0)) {                        
+				//LOG_INFO("******* health.temperature %zu", health.temperature);
+				//LOG_INFO("******* temps.size %zu", temps.size());
 
-                //LOG_INFO("******* health.temperature %zu", health.temperature);
-                //LOG_INFO("******* temps.size %zu", temps.size());
+				if (temps[m_ctx.device_id]->tempWasTooHigh != true) {
+					LOG_INFO(MAGENTA_BOLD("%s GPU %u") " temp " RED_BOLD("%u") " too high (max " YELLOW("%u") "), cooling down", m_ctx.device_name, m_ctx.device_id, health.temperature, m_ctx.device_maxtemp);
+				}
+				bDoWork = false;
+				temps[m_ctx.device_id]->tempWasTooHigh = true;
 
-                if (temps[m_id]->tempWasTooHigh != true) {
-                    LOG_INFO(MAGENTA_BOLD("%s GPU %zu") " temp " RED_BOLD("%u") " too high (max " YELLOW("%d") "), cooling down", m_ctx.device_name, m_id, health.temperature, m_ctx.device_maxtemp);
-                }
-                temps[m_id]->tempWasTooHigh = true;
-                for(int i = 0; i < 5; i++) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-                    if (Workers::sequence() == 0) {
-                        break;
-                    }
-                }
-                NvmlApi::temp(m_id, health);
-                bDoWork = false;
-            }
-            
-            if ((temps[m_ctx.device_id]->tempWasTooHigh) && (health.temperature < m_ctx.device_maxtemp - m_ctx.device_maxfallofftemp)) { // - GpuTempDiff
-                    
-				LOG_DEBUG("******* health.temperature %zu gpu %zu", health.temperature, m_id);
-				LOG_DEBUG("******* temps.size %zu", temps.size());
-				LOG_DEBUG("******* device_maxtemp %zu gpu %zu", m_ctx.device_maxtemp, m_id);
-								
-				LOG_INFO(MAGENTA_BOLD("%s GPU %zu") " temp " YELLOW("%u") " reached (max " YELLOW("%u - %u") "), continue mining",  m_ctx.device_name, m_ctx.device_id, health.temperature, m_ctx.device_maxtemp, m_ctx.device_maxfallofftemp);
-                    temps[m_id]->tempWasTooHigh = false;
-                    bDoWork = true;
-                }
-        }
+				Workers::pause();
 
-        if (bDoWork) {
-            if (Workers::isPaused()) {
-                do {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-                }
-                while (Workers::isPaused());
+				for (int i = 0; i < 5; i++) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+					//if (Workers::sequence() == 0) {
+					//	break;
+					//}
+				}
+				NvmlApi::health(m_ctx.device_id, health);
+				bDoWork = false;
+			}
 
-                if (Workers::sequence() == 0) {
-                    break;
-                }
+			if ((temps[m_ctx.device_id]->tempWasTooHigh) && (health.temperature < m_ctx.device_maxtemp - m_ctx.device_maxfallofftemp)) { // - GpuTempDiff
+				LOG_INFO(MAGENTA_BOLD("%s GPU %u") " temp " YELLOW("%u") " reached (max " YELLOW("%u - %u") "), continue mining", m_ctx.device_name, m_ctx.device_id, health.temperature, m_ctx.device_maxtemp, m_ctx.device_maxfallofftemp);
+				temps[m_ctx.device_id]->tempWasTooHigh = false;
+				bDoWork = true;
+				Workers::setEnabled(true);
+			}
+		}
 
-                consumeJob();
-            }
+		if (bDoWork) {
+			if (Workers::isPaused()) {
+				do {
+					std::this_thread::sleep_for(std::chrono::milliseconds(200));
+				} while (Workers::isPaused());
 
-            cryptonight_extra_cpu_set_data(&m_ctx, m_blob, m_job.size());
+				if (Workers::sequence() == 0) {
+					break;
+				}
 
-            while (!Workers::isOutdated(m_sequence)) {
-                uint32_t foundNonce[10];
-                uint32_t foundCount;
-    
-                cryptonight_extra_cpu_prepare(&m_ctx, m_nonce, m_algorithm, m_job.algorithm().variant());
-                cryptonight_gpu_hash(&m_ctx, m_algorithm, m_job.algorithm().variant(), m_nonce);
-                cryptonight_extra_cpu_final(&m_ctx, m_nonce, m_job.target(), &foundCount, foundNonce, m_algorithm);
+				consumeJob();
+			}
 
-                for (size_t i = 0; i < foundCount; i++) {
-                    *m_job.nonce() = foundNonce[i];
-                    m_job.setDeviceId( m_id );
+			cryptonight_extra_cpu_set_data(&m_ctx, m_blob, m_job.size());
 
-                    Workers::submit(m_job);
-                }
-                
-                m_count += m_ctx.device_blocks * m_ctx.device_threads;
-                m_nonce += m_ctx.device_blocks * m_ctx.device_threads;
-                
-            
-                storeStats();
-                std::this_thread::yield();
-            }
+			while (!Workers::isOutdated(m_sequence)) {
+				uint32_t foundNonce[10];
+				uint32_t foundCount;
 
-            consumeJob();
-        }
-        else {
-            LOG_DEBUG("******* Workers::sequence() %zu, m_ctx.device_maxtemp %zu, m_ctx.device_id %zu bDoWork %zu", Workers::sequence(), m_ctx.device_maxtemp, m_id, bDoWork);
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        }
-    }
+				NvmlApi::health(m_ctx.device_id, health);
+				if (health.temperature > m_ctx.device_maxtemp) {
+					std::this_thread::sleep_for(std::chrono::milliseconds(500));
+					continue;
+				}
+				//cryptonight_extra_cpu_prepare(&m_ctx, m_nonce, m_algorithm);
+				//cryptonight_gpu_hash(&m_ctx, m_algorithm, m_job.variant(), m_nonce);
+				//cryptonight_extra_cpu_final(&m_ctx, m_nonce, m_job.target(), &foundCount, foundNonce, m_algorithm);
+				cryptonight_extra_cpu_prepare(&m_ctx, m_nonce, m_algorithm, m_job.algorithm().variant());
+				cryptonight_gpu_hash(&m_ctx, m_algorithm, m_job.algorithm().variant(), m_nonce);
+				cryptonight_extra_cpu_final(&m_ctx, m_nonce, m_job.target(), &foundCount, foundNonce, m_algorithm);
 
-    cryptonight_extra_cpu_free(&m_ctx, m_algorithm);
+				for (size_t i = 0; i < foundCount; i++) {
+					*m_job.nonce() = foundNonce[i];
+					m_job.setDeviceId(m_id);
+
+					Workers::submit(m_job);
+				}
+
+				m_count += m_ctx.device_blocks * m_ctx.device_threads;
+				m_nonce += m_ctx.device_blocks * m_ctx.device_threads;
+
+
+				storeStats();
+				std::this_thread::yield();
+			}
+
+			consumeJob();
+		}
+		else {
+			LOG_DEBUG("******* Workers::sequence() %zu, m_ctx.device_maxtemp %zu, m_ctx.device_id %zu bDoWork %zu", Workers::sequence(), m_ctx.device_maxtemp, m_ctx.device_id, bDoWork);
+			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		}
+	}
 }
-
 
 bool CudaWorker::resume(const Job &job)
 {

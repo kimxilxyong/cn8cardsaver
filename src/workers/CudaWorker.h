@@ -54,11 +54,11 @@ protected:
 
 private:
     bool resume(const Job &job);
-    void consumeJob();
+	bool isTooHot();
+	void consumeJob();
     void save(const Job &job);
     void setJob();
     void storeStats();
-
     const size_t m_id;
     const size_t m_threads;
     const xmrig::Algo m_algorithm;
