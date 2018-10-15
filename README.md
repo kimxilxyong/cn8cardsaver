@@ -1,6 +1,6 @@
 # CN8CardSaver for NVIDIA GPUs
 
-:warning: **[Monero will change PoW algorithm on October 18](https://github.com/xmrig/xmrig/issues/753), all miners should be updated to [v1.0.2+](https://github.com/kimxilxyong/cn8cardsaver/releases/tag/v1.0.2)** :warning:
+:warning: **[Monero will change PoW algorithm on October 18](https://github.com/xmrig/xmrig/issues/753), all miners should be updated to [v1.0.3+](https://github.com/kimxilxyong/cn8cardsaver/releases/tag/v1.0.2)** :warning:
 
 CN8CardSaver is a high performance Monero (XMR) NVIDIA miner forked from XMRig-nvidia.
 
