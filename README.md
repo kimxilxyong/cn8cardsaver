@@ -1,24 +1,21 @@
-# XMRig NVIDIA
+# CN8CardSaver for NVIDIA GPUs
 
-:warning: **[Monero changed PoW algorithm on October 18](https://github.com/xmrig/xmrig/issues/753), all miners and proxy should be updated to [v2.8+](https://github.com/xmrig/xmrig-nvidia/releases/tag/v2.8.3)** :warning:
+:warning: **[Monero will change PoW algorithm on October 18](https://github.com/xmrig/xmrig/issues/753), all miners should be updated to [v1.0.3+](https://github.com/kimxilxyong/cn8cardsaver/releases/tag/v1.0.2)** :warning:
 
-[![Github All Releases](https://img.shields.io/github/downloads/xmrig/xmrig-nvidia/total.svg)](https://github.com/xmrig/xmrig-nvidia/releases)
-[![GitHub release](https://img.shields.io/github/release/xmrig/xmrig-nvidia/all.svg)](https://github.com/xmrig/xmrig-nvidia/releases)
-[![GitHub Release Date](https://img.shields.io/github/release-date-pre/xmrig/xmrig-nvidia.svg)](https://github.com/xmrig/xmrig-nvidia/releases)
-[![GitHub license](https://img.shields.io/github/license/xmrig/xmrig-nvidia.svg)](https://github.com/xmrig/xmrig-nvidia/blob/master/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/xmrig/xmrig-nvidia.svg)](https://github.com/xmrig/xmrig-nvidia/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/xmrig/xmrig-nvidia.svg)](https://github.com/xmrig/xmrig-nvidia/network)
+CN8CardSaver is a high performance Monero (XMR) NVIDIA miner forked from XMRig-nvidia.
 
-XMRig is high performance Monero (XMR) NVIDIA miner, with the official full Windows support.
+cn8cardsaver (CryptoNight V1/2) is a miner for Monero XMR with GPU temperature control support. With it you can keep your expensive cards save.
+Keep it below 65 C to be on the safe side. If it gets to 80 C or above you are damaging your card.
+Use the switches ```--max-gpu-temp=65 and --gpu-temp-falloff=9```
 
 GPU mining part based on [psychocrypt](https://github.com/psychocrypt) code used in xmr-stak-nvidia.
 
-* This is the **NVIDIA GPU** mining version, there is also a [CPU version](https://github.com/xmrig/xmrig) and [AMD GPU version]( https://github.com/xmrig/xmrig-amd).
-* [Roadmap](https://github.com/xmrig/xmrig/issues/106) for next releases.
-
-:warning: Suggested values for GPU auto configuration can be not optimal or not working, you may need tweak your threads options. Please feel free open an [issue](https://github.com/xmrig/xmrig-nvidia/issues) if auto configuration suggest wrong values.
-
-<img src="https://i.imgur.com/wRCZ3IJ.png" width="620" >
+Temperature control:
+### Command line options
+```
+      --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
+      --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
+```
 
 #### Table of contents
 * [Features](#features)
@@ -36,13 +33,14 @@ GPU mining part based on [psychocrypt](https://github.com/psychocrypt) code used
 * CryptoNight-Lite support for AEON.
 * Automatic GPU configuration.
 * GPU health monitoring (clocks, power, temperature, fan speed) 
+* GPU temperature management (option --max-gpu-temp, --gpu-temp-falloff)
 * Nicehash support.
 * It's open source software.
 
 ## Download
-* Binary releases: https://github.com/xmrig/xmrig-nvidia/releases
-* Git tree: https://github.com/xmrig/xmrig-nvidia.git
-  * Clone with `git clone https://github.com/xmrig/xmrig-nvidia.git`  :hammer: [Build instructions](https://github.com/xmrig/xmrig-nvidia/wiki/Build).
+* Binary releases: https://github.com/kimxilxyong/cn8cardsaver/releases
+* Git tree: https://github.com/kimxilxyong/cn8cardsaver.git
+* Clone with `git clone https://github.com/kimxilxyong/cn8cardsaver.git`  :hammer: [Build instructions](https://github.com/xmrig/xmrig-nvidia/wiki/Build).
 
 ## Usage
 Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or share configurations.
@@ -70,6 +68,8 @@ Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or sha
       --cuda-bfactor=[0-12] run CryptoNight core kernel in smaller pieces
       --cuda-bsleep=N       insert a delay of N microseconds between kernel launches
       --cuda-affinity=N     affine GPU threads to a CPU
+      --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
+      --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
       --no-color            disable colored output
       --variant             algorithm PoW variant
       --donate-level=N      donate level, default 5% (5 minutes in 100 minutes)
@@ -93,17 +93,10 @@ Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or sha
 ## Donations
 Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via command line option `--donate-level`.
 
-* XMR: `48edfHu7V9Z84YzzMa6fUueoELZ9ZRXq9VetWzYGzKt52XU5xvqgzYnDK9URnRoJMk1j8nLwEVsaSWJ4fhdUyZijBGUicoD`
-* BTC: `1P7ujsXeX7GxQwHNnJsRMgAdNkFZmNVqJT`
-
-## Release checksums
-### SHA-256
-```
-05de6f8587ca7f739533e54ef314aff371ddfb884e96ae202035a38bc88712cb xmrig-nvidia-2.8.3-cuda-8_0-win64.zip/xmrig-nvidia.exe
-b97caf519da303986be50d4551cce7b1aeb116ca5d7e2a6ff2ce364b079a9437 xmrig-nvidia-2.8.3-cuda-9_2-win64.zip/xmrig-nvidia.exe
-```
+* XMR: `422KmQPiuCE7GdaAuvGxyYScin46HgBWMQo4qcRpcY88855aeJrNYWd3ZqE4BKwjhA2BJwQY7T2p6CUmvwvabs8vQqZAzLN`
+* BTC: `17WoADQ3bEPZvhMtMrfRvGCcqamYJ6DKju`
 
 ## Contacts
-* support@xmrig.com
-* [reddit](https://www.reddit.com/user/XMRig/)
-* [twitter](https://twitter.com/xmrig_dev)
+* kimxilxyong@gmail.com
+* [reddit](https://www.reddit.com/user/kimilyong/)
+
