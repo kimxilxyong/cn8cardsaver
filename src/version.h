@@ -24,18 +24,18 @@
 #ifndef XMRIG_VERSION_H
 #define XMRIG_VERSION_H
 
-#define APP_ID        "cn8cardsaver"
-#define APP_NAME      "cn8cardsaver"
-#define APP_DESC      "Cryptonight CUDA miner with GPU temperature control"
-#define APP_VERSION   "1.0.3"
-#define APP_DOMAIN    "cn8cardsaver.com"
-#define APP_SITE      "www.cn8cardsaver.com"
-#define APP_COPYRIGHT "Copyright (C) 2018 cn8cardsaver.com"
+#define APP_ID        "xmrig-nvidia"
+#define APP_NAME      "XMRig-NVIDIA"
+#define APP_DESC      "XMRig CUDA miner"
+#define APP_VERSION   "2.8.1"
+#define APP_DOMAIN    "xmrig.com"
+#define APP_SITE      "www.xmrig.com"
+#define APP_COPYRIGHT "Copyright (C) 2016-2018 xmrig.com"
 #define APP_KIND      "nvidia"
 
 #define APP_VER_MAJOR  2
 #define APP_VER_MINOR  8
-#define APP_VER_PATCH  1
+#define APP_VER_PATCH  3
 
 #ifdef _MSC_VER
 #   if (_MSC_VER >= 1910)
