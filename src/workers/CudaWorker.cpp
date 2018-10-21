@@ -83,7 +83,7 @@ CudaWorker::~CudaWorker() {
 
 void CudaWorker::start()
 {
-	bool bDoWork = true;
+	//bool bDoWork = true;
 	Health health;
 
 	if (cuda_get_deviceinfo(&m_ctx, m_algorithm) != 0 || cryptonight_gpu_init(&m_ctx, m_algorithm) != 1) {
@@ -94,7 +94,7 @@ void CudaWorker::start()
 	while (Workers::sequence() > 0) {
 
 		/* Check for max temp and cool off if needed */
-		if (m_ctx.device_maxtemp > 0) {
+		/*if (m_ctx.device_maxtemp > 0) {
 			
 			NvmlApi::health(m_ctx.device_id, health);
 
@@ -138,9 +138,9 @@ void CudaWorker::start()
 				bDoWork = true;
 				Workers::setEnabled(true);
 			}
-		}
+		}*/
 
-		if (bDoWork) {
+		
 			if (Workers::isPaused()) {
 				do {
 					std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -155,15 +155,37 @@ void CudaWorker::start()
 
 			cryptonight_extra_cpu_set_data(&m_ctx, m_blob, m_job.size());
 
+			bool TooHot;
 			while (!Workers::isOutdated(m_sequence)) {
+
+                NvmlApi::health(m_id, health);                             
+                if ((health.temperature > m_ctx.device_maxtemp) && (health.temperature > (m_ctx.device_maxtemp - m_ctx.device_maxfallofftemp))) {
+                    
+                    TooHot = true;
+                    LOG_INFO("*****isOutdated too hot GPU %u %u mxtemp %u",m_id, health.temperature, m_ctx.device_maxtemp );
+                    do {
+                        //std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+                        
+
+						for (int i = 0; i < 10; i++) {
+							std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+							if (Workers::sequence() == 0) 
+								break;
+						}
+						NvmlApi::health(m_id, health);                             
+                        if  (health.temperature < (m_ctx.device_maxtemp - m_ctx.device_maxfallofftemp)) {
+                            TooHot = false;
+                        }
+						if (Workers::sequence() == 0) 
+							break;
+                    } while(TooHot);                  
+                }
+
+
+
 				uint32_t foundNonce[10];
 				uint32_t foundCount;
 
-				NvmlApi::health(m_ctx.device_id, health);
-				if (health.temperature > m_ctx.device_maxtemp) {
-					std::this_thread::sleep_for(std::chrono::milliseconds(500));
-					continue;
-				}
 				//cryptonight_extra_cpu_prepare(&m_ctx, m_nonce, m_algorithm);
 				//cryptonight_gpu_hash(&m_ctx, m_algorithm, m_job.variant(), m_nonce);
 				//cryptonight_extra_cpu_final(&m_ctx, m_nonce, m_job.target(), &foundCount, foundNonce, m_algorithm);
@@ -188,12 +210,10 @@ void CudaWorker::start()
 
 			consumeJob();
 		}
-		else {
-			LOG_DEBUG("******* Workers::sequence() %zu, m_ctx.device_maxtemp %zu, m_ctx.device_id %zu bDoWork %zu", Workers::sequence(), m_ctx.device_maxtemp, m_ctx.device_id, bDoWork);
-			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-		}
-	}
+	cryptonight_extra_cpu_free(&m_ctx, m_algorithm);	
 }
+
+
 
 bool CudaWorker::resume(const Job &job)
 {
