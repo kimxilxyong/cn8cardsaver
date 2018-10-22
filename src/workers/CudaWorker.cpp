@@ -162,7 +162,8 @@ void CudaWorker::start()
                 if ((health.temperature > m_ctx.device_maxtemp) && (health.temperature > (m_ctx.device_maxtemp - m_ctx.device_maxfallofftemp))) {
                     
                     TooHot = true;
-                    LOG_INFO("*****isOutdated too hot GPU %u %u mxtemp %u",m_id, health.temperature, m_ctx.device_maxtemp );
+                    //LOG_INFO("*****isOutdated too hot GPU %u %u mxtemp %u",m_id, health.temperature, m_ctx.device_maxtemp );
+					LOG_INFO(MAGENTA_BOLD("%s GPU %u") " temp " RED_BOLD("%u") " too high (max " YELLOW("%u") "), cooling down", m_ctx.device_name, m_ctx.device_id, health.temperature, m_ctx.device_maxtemp);
                     do {
                         //std::this_thread::sleep_for(std::chrono::milliseconds(20000));
                         
@@ -175,6 +176,7 @@ void CudaWorker::start()
 						NvmlApi::health(m_id, health);                             
                         if  (health.temperature < (m_ctx.device_maxtemp - m_ctx.device_maxfallofftemp)) {
                             TooHot = false;
+							LOG_INFO(MAGENTA_BOLD("%s GPU %u") " temp " YELLOW("%u") " reached (max " YELLOW("%u - %u") "), continue mining", m_ctx.device_name, m_ctx.device_id, health.temperature, m_ctx.device_maxtemp, m_ctx.device_maxfallofftemp);
                         }
 						if (Workers::sequence() == 0) 
 							break;
