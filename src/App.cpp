@@ -137,12 +137,50 @@ int App::exec()
 
     m_controller->network()->connect();
 
-    const int r = uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-    uv_loop_close(uv_default_loop());
+    int r;
+	int lc = 0;
+	r = uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+	lc = uv_loop_close(uv_default_loop());
+	if (lc == UV_EBUSY) {
+		uv_walk(uv_default_loop(), App::on_uv_walk, NULL);
+		r = uv_run(uv_default_loop(), UV_RUN_ONCE);
+	}
+	lc = uv_loop_close(uv_default_loop());
+	if (lc == UV_EBUSY) {
+		LOG_ERR("Failed to close handles.");
+		r = uv_run(uv_default_loop(), UV_RUN_NOWAIT);
+	}
 
     return r;
 }
 
+void App::on_uv_walk(uv_handle_t* handle, void* arg)
+{
+	//if (!(handle->flags & UV_HANDLE_CLOSING)) {
+    if (!uv_is_closing(handle)) {
+		uv_close(handle, App::on_uv_close);
+	}
+}
+
+void App::on_uv_close(uv_handle_t* handle)
+{
+	if (handle != NULL)
+	{
+		//if (!(handle->flags & UV_HANDLE_CLOSED)) {
+        if (!uv_is_closing(handle)) {    
+
+			/*uv_signal_t* signal = (uv_signal_t*)handle;
+			int sig = signal->signum;
+			int psig = signal->pending_signum;
+			int deb = sig + psig;
+			*/
+			int lc = uv_loop_close(handle->loop);
+			if (lc == UV_EBUSY) {
+				uv_run(uv_default_loop(), UV_RUN_NOWAIT);
+			}
+		}
+	}
+}
 
 void App::onConsoleCommand(char command)
 {

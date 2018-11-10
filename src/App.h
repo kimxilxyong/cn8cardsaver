@@ -58,6 +58,8 @@ private:
   void close();
 
   static void onSignal(uv_signal_t *handle, int signum);
+  static void on_uv_walk(uv_handle_t* handle, void* arg);
+  static void on_uv_close(uv_handle_t* handle);
 
   static App *m_self;
 
