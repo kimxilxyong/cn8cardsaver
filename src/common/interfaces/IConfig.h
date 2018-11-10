@@ -67,6 +67,9 @@ public:
         FingerprintKey    = 1014,
         AutoSaveKey       = 1016,
 
+        MaxTempKey        = 1260,
+        FalloffKey        = 1261,
+
         // xmrig common
         CPUPriorityKey    = 1021,
         NicehashKey       = 1006,
@@ -116,8 +119,6 @@ public:
         CudaLaunchKey     = 1204,
         CudaAffinityKey   = 1205,
         CudaMaxUsageKey   = 1206,
-        CudaMaxTempKey    = 1207,
-        CudaTempFalloffKey= 1208,
     };
 
     virtual ~IConfig() {}

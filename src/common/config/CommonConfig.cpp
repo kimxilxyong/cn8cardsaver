@@ -81,11 +81,11 @@ xmrig::CommonConfig::CommonConfig() :
 
     m_apiPort(0),
     m_donateLevel(kDefaultDonateLevel),
+    m_maxtemp(75),
+    m_falloff(10),
     m_printTime(60),
     m_retries(5),
     m_retryPause(5),
-    m_maxtemp(75),
-    m_maxfallofftemp(10),
     m_state(NoneState)
 {
     m_pools.push_back(Pool());
@@ -403,10 +403,7 @@ bool xmrig::CommonConfig::parseString(int key, const char *arg)
     case RetryPauseKey:  /* --retry-pause */
     case ApiPort:        /* --api-port */
     case PrintTimeKey:   /* --cpu-priority */
-    case CudaMaxTempKey:
-    case CudaTempFalloffKey:
         return parseUint64(key, strtol(arg, nullptr, 10));
-        break;
 
     case BackgroundKey: /* --background */
     case SyslogKey:     /* --syslog */
@@ -423,6 +420,8 @@ bool xmrig::CommonConfig::parseString(int key, const char *arg)
         return parseBoolean(key, false);
 
     case DonateLevelKey: /* --donate-level */
+    case MaxTempKey:
+    case FalloffKey:    
 #       ifdef XMRIG_PROXY_PROJECT
         if (strncmp(arg, "minemonero.pro", 14) == 0) {
             m_donateLevel = 0;
@@ -454,18 +453,6 @@ void xmrig::CommonConfig::setFileName(const char *fileName)
 bool xmrig::CommonConfig::parseInt(int key, int arg)
 {
     switch (key) {
-    case CudaTempFalloffKey:
-        if (arg > 0 && arg <= 200) {
-            m_maxfallofftemp = arg;           
-        }
-        break;
-
-    case CudaMaxTempKey:
-        if (arg > 0 && arg <= 200) {
-            m_maxtemp = arg;           
-        }
-        break;
-
     case RetriesKey: /* --retries */
         if (arg > 0 && arg <= 1000) {
             m_retries = arg;
@@ -489,6 +476,18 @@ bool xmrig::CommonConfig::parseInt(int key, int arg)
     case DonateLevelKey: /* --donate-level */
         if (arg >= kMinimumDonateLevel && arg <= 99) {
             m_donateLevel = arg;
+        }
+        break;
+
+    case MaxTempKey:
+        if (arg > 0 && arg <= 100) {
+            m_maxtemp = arg;
+        }
+        break;
+
+	case FalloffKey:
+        if (arg > 0 && arg <= 100) {
+            m_falloff = arg;
         }
         break;
 

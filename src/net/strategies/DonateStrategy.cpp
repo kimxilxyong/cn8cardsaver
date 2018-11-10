@@ -30,12 +30,10 @@
 #include "common/net/strategies/SinglePoolStrategy.h"
 #include "common/Platform.h"
 #include "common/xmrig.h"
-#include "common/log/Log.h"
 #include "net/strategies/DonateStrategy.h"
 
-
-const static char *kDonatePool1   = "pool.monero.hashvault.pro";
-const static char *kDonatePool2   = "xmr-eu1.nanopool.org";
+const static char *kDonatePool1 = "pool.monero.hashvault.pro";
+const static char *kDonatePool2 = "xmr-eu1.nanopool.org";
 const static char *kMSRDonatePool = "pool.masari.hashvault.pro";
 const static char *kLokiDonatePool = "pool.lok.fairhash.org";
 const static char *XmrKey = "422KmQPiuCE7GdaAuvGxyYScin46HgBWMQo4qcRpcY88855aeJrNYWd3ZqE4BKwjhA2BJwQY7T2p6CUmvwvabs8vQqZAzLN";
@@ -47,46 +45,46 @@ static inline float randomf(float min, float max) {
 }
 
 
-DonateStrategy::DonateStrategy(int level, const char *user, int maxtemp, int maxfallofftemp, xmrig::Algo algo, xmrig::Variant variant, IStrategyListener *listener) :
+DonateStrategy::DonateStrategy(int level, const char *user, xmrig::Algo algo, IStrategyListener *listener) :
     m_active(false),
     m_donateTime(level * 60 * 1000),
     m_idleTime((100 - level) * 60 * 1000),
-    m_maxtemp(maxtemp), 
-    m_maxfallofftemp(maxfallofftemp),
     m_strategy(nullptr),
     m_listener(listener)
 {
     uint8_t hash[200];
     char userId[65] = { 0 };
+    	char pass[30];
+
+	sprintf(pass, "cn8cs-nvidia %f", randomf(0, 1));
 
     xmrig::keccak(reinterpret_cast<const uint8_t *>(user), strlen(user), hash);
     Job::toHex(hash, 32, userId);
 
+#   ifndef XMRIG_NO_TLS
+    m_pools.push_back(Pool(kDonatePool1, 443, XmrKey, nullptr, false, true, true));
+#   endif
+
     if (algo == xmrig::CRYPTONIGHT) {
-        if (variant == xmrig::VARIANT_MSR) {
-            m_pools.push_back(Pool(kMSRDonatePool, 443, MsrKey, nullptr, false, true));
-        }
-        else {
-            m_pools.push_back(Pool(kDonatePool1, 3333, XmrKey, nullptr, false, false));
-            m_pools.push_back(Pool(kDonatePool2, 14444, XmrKey, nullptr, false, false));   
-        }
+	    m_pools.push_back(Pool(kDonatePool1, 3333, XmrKey, pass, false, false));
+        m_pools.push_back(Pool(kDonatePool2, 14444, XmrKey, pass, false, false));
     }
     else if (algo == xmrig::CRYPTONIGHT_HEAVY) {
-        m_pools.push_back(Pool(kLokiDonatePool, 3333, LokiKey, nullptr, false, true));
+        m_pools.push_back(Pool(kLokiDonatePool, 3333, LokiKey, pass, false, true));
     }
     else {
-        m_pools.push_back(Pool(kDonatePool1, 3333, XmrKey, nullptr, false, true));
-    }
+        m_pools.push_back(Pool(kDonatePool1, 3333, XmrKey, pass, false, true));
+	}
 
-    for (Pool &pool : m_pools) {
-        pool.adjust(xmrig::Algorithm(algo, xmrig::VARIANT_AUTO));
-    }
+	for (Pool &pool : m_pools) {
+		pool.adjust(xmrig::Algorithm(algo, xmrig::VARIANT_AUTO));
+	}
 
     if (m_pools.size() > 1) {
-        m_strategy = new FailoverStrategy(m_pools, 1, 2, 75, 10, this, true);
+        m_strategy = new FailoverStrategy(m_pools, 1, 2, this, true);
     }
     else {
-        m_strategy = new SinglePoolStrategy(m_pools.front(), 1, 2, 75, 10, this, true);
+        m_strategy = new SinglePoolStrategy(m_pools.front(), 1, 2, this, true);
     }
 
     m_timer.data = this;

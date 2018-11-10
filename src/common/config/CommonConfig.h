@@ -60,9 +60,10 @@ public:
     inline int printTime() const                   { return m_printTime; }
     inline int retries() const                     { return m_retries; }
     inline int retryPause() const                  { return m_retryPause; }
-    inline int maxtemp() const                     { return m_maxtemp; } 
-    inline int maxfallofftemp() const              { return m_maxfallofftemp; }
     inline void setColors(bool colors)             { m_colors = colors; }
+
+    inline int maxtemp() const                     { return m_maxtemp; }
+    inline int falloff() const                     { return m_falloff; }
 
     inline bool isWatch() const override               { return m_watch && !m_fileName.isNull(); }
     inline const Algorithm &algorithm() const override { return m_algorithm; }
@@ -99,11 +100,11 @@ protected:
     bool m_watch;
     int m_apiPort;
     int m_donateLevel;
+    int m_maxtemp;
+    int m_falloff;    
     int m_printTime;
     int m_retries;
     int m_retryPause;
-    int m_maxtemp;
-    int m_maxfallofftemp;
     State m_state;
     std::vector<Pool> m_activePools;
     std::vector<Pool> m_pools;

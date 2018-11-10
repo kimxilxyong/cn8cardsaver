@@ -70,11 +70,11 @@ Options:\n\
       --cuda-bfactor=[0-12] run CryptoNight core kernel in smaller pieces\n\
       --cuda-bsleep=N       insert a delay of N microseconds between kernel launches\n\
       --cuda-affinity=N     affine GPU threads to a CPU\n\
-      --max-gpu-temp        Maximum temperature a GPU may reach before its cooled down (default 75)\n\
-      --gpu-temp-falloff    Amount of temperature to cool off before mining starts again (default 10)\n\
       --no-color            disable colored output\n\
       --variant             algorithm PoW variant\n\
       --donate-level=N      donate level, default 5%% (5 minutes in 100 minutes)\n\
+      --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)\n\
+      --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)\n\
       --user-agent          set custom user-agent string for pool\n\
   -B, --background          run the miner in the background\n\
   -c, --config=FILE         load a JSON-format configuration file\n\
@@ -121,6 +121,8 @@ static struct option const options[] = {
     { "max-gpu-usage",     1, nullptr, xmrig::IConfig::CudaMaxUsageKey   }, // deprecated.
     { "config",            1, nullptr, xmrig::IConfig::ConfigKey         },
     { "donate-level",      1, nullptr, xmrig::IConfig::DonateLevelKey    },
+    { "max-gpu-temp",      1, nullptr, xmrig::IConfig::MaxTempKey        },
+    { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::FalloffKey        },
     { "dry-run",           0, nullptr, xmrig::IConfig::DryRunKey         },
     { "help",              0, nullptr, xmrig::IConfig::HelpKey           },
     { "keepalive",         0, nullptr, xmrig::IConfig::KeepAliveKey      },
@@ -141,8 +143,6 @@ static struct option const options[] = {
     { "tls",               0, nullptr, xmrig::IConfig::TlsKey            },
     { "tls-fingerprint",   1, nullptr, xmrig::IConfig::FingerprintKey    },
     { "version",           0, nullptr, xmrig::IConfig::VersionKey        },
-    { "max-gpu-temp",      1, nullptr, xmrig::IConfig::CudaMaxTempKey    },
-    { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::CudaTempFalloffKey},
     { nullptr,             0, nullptr, 0                                 }
 };
 
@@ -152,6 +152,8 @@ static struct option const config_options[] = {
     { "background",        0, nullptr, xmrig::IConfig::BackgroundKey     },
     { "colors",            0, nullptr, xmrig::IConfig::ColorKey          },
     { "donate-level",      1, nullptr, xmrig::IConfig::DonateLevelKey    },
+    { "max-gpu-temp",      1, nullptr, xmrig::IConfig::MaxTempKey        },
+    { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::FalloffKey        },    
     { "dry-run",           0, nullptr, xmrig::IConfig::DryRunKey         },
     { "log-file",          1, nullptr, xmrig::IConfig::LogFileKey        },
     { "print-time",        1, nullptr, xmrig::IConfig::PrintTimeKey      },
@@ -166,8 +168,6 @@ static struct option const config_options[] = {
     { "cuda-max-threads",  1, nullptr, xmrig::IConfig::CudaMaxThreadsKey },
     { "max-gpu-threads",   1, nullptr, xmrig::IConfig::CudaMaxThreadsKey }, // deprecated, use --cuda-max-threads instead.
     { "max-gpu-usage",     1, nullptr, xmrig::IConfig::CudaMaxUsageKey   }, // deprecated.
-    { "max-gpu-temp",      1, nullptr, xmrig::IConfig::CudaMaxTempKey    },
-    { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::CudaTempFalloffKey},
     { nullptr,             0, nullptr, 0                                 }
 };
 

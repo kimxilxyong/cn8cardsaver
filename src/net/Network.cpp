@@ -41,8 +41,6 @@
 #include "net/Network.h"
 #include "net/strategies/DonateStrategy.h"
 #include "workers/Workers.h"
-#include "nvidia/NvmlApi.h"
-#include "nvidia/Health.h"
 
 
 Network::Network(xmrig::Controller *controller) :
@@ -56,14 +54,14 @@ Network::Network(xmrig::Controller *controller) :
     const std::vector<Pool> &pools = controller->config()->pools();
 
     if (pools.size() > 1) {
-        m_strategy = new FailoverStrategy(pools, controller->config()->retryPause(), controller->config()->retries(), controller->config()->maxtemp(), controller->config()->maxfallofftemp(), this);
+        m_strategy = new FailoverStrategy(pools, controller->config()->retryPause(), controller->config()->retries(), this);
     }
     else {
-        m_strategy = new SinglePoolStrategy(pools.front(), controller->config()->retryPause(), controller->config()->retries(), controller->config()->maxtemp(), controller->config()->maxfallofftemp(), this);
+        m_strategy = new SinglePoolStrategy(pools.front(), controller->config()->retryPause(), controller->config()->retries(), this);
     }
 
     if (controller->config()->donateLevel() > 0) {
-        m_donate = new DonateStrategy(controller->config()->donateLevel(), controller->config()->pools().front().user(), controller->config()->maxtemp(), controller->config()->maxfallofftemp(), controller->config()->algorithm().algo(), controller->config()->algorithm().variant(), this);
+        m_donate = new DonateStrategy(controller->config()->donateLevel(), controller->config()->pools().front().user(), controller->config()->algorithm().algo(), this);
     }
 
     m_timer.data = this;
@@ -155,24 +153,29 @@ void Network::onResultAccepted(IStrategy *strategy, Client *client, const Submit
 {
     m_state.add(result, error);
 
-    Health health;
-    uint32_t deviceId = result.threadId;
-    LOG_DEBUG("********** onResultAccepted result.threadId %zu", deviceId );
-    
-	if (!NvmlApi::temp(deviceId, health)) {
-		LOG_ERR("NvmlApi::temp(deviceId, health)) Failed");
-	}
-	LOG_DEBUG("********** onResultAccepted result.threadId %zu temp %u", deviceId, health.temperature);
-
     if (error) {
-        LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " MAGENTA_BOLD("GPU %d" " %u" " C")
-                            : "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) GPU %d" " %u" " C",
-                 m_state.accepted, m_state.rejected, result.diff, error, result.elapsed, deviceId, health.temperature);
+		if (result.needscooling) {
+			LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms) card %i temp %i needs cooling TRUE"
+				                : "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) card %i temp %i needs cooling TRUE",
+                 m_state.accepted, m_state.rejected, result.diff, error, result.elapsed, result.card, result.temp);
+		} 
+		else {
+			LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms) card %i temp %i needs cooling FALSE"
+				: "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) card %i temp %i needs cooling FALSE",
+				m_state.accepted, m_state.rejected, result.diff, error, result.elapsed, result.card, result.temp);
+		}
     }
     else {
-        LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " MAGENTA_BOLD("GPU %d" " %u" " C")
-                            : "accepted (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) GPU %d" " %u" " C",
-                 m_state.accepted, m_state.rejected, result.diff, result.elapsed, deviceId, health.temperature);
+		if (result.needscooling) {
+			LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms) card %i temp %i needs cooling TRUE"
+				: "accepted (%" PRId64 "/%" PRId64 ") diff %u (%" PRIu64 " ms) card %i temp %i needs cooling TRUE",
+				m_state.accepted, m_state.rejected, result.diff, result.elapsed, result.card, result.temp);
+		}
+		else {
+			LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms) card %i temp %i needs cooling FALSE"
+				: "accepted (%" PRId64 "/%" PRId64 ") diff %u (%" PRIu64 " ms) card %i temp %i needs cooling FALSE",
+				m_state.accepted, m_state.rejected, result.diff, result.elapsed, result.card, result.temp);
+		}
     }
 }
 

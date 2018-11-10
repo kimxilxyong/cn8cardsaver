@@ -41,8 +41,7 @@ public:
     static bool init();
     static void release();
 
-    static bool health(uint32_t id, Health &health);
-	static bool temp(size_t id, Health &health);
+    static bool health(int id, Health &health);
     static const char *version();
     static void bind(const std::vector<xmrig::IThread*> &threads);
 

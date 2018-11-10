@@ -30,7 +30,6 @@
 #include "nvidia/CudaCLI.h"
 #include "nvidia/cryptonight.h"
 #include "workers/CudaThread.h"
-#include "common/log/Log.h"
 
 
 CudaCLI::CudaCLI() :
@@ -39,7 +38,7 @@ CudaCLI::CudaCLI() :
 }
 
 
-bool CudaCLI::setup(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo)
+bool CudaCLI::setup(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo, bool isCNv2)
 {
     if (isEmpty() || m_count == 0) {
         return false;
@@ -58,12 +57,9 @@ bool CudaCLI::setup(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo)
         ctx.device_threads = this->threads(i);
         ctx.device_bfactor = bfactor(i);
         ctx.device_bsleep  = bsleep(i);
-        ctx.device_maxtemp  = maxtemp(i);
-        ctx.device_maxfallofftemp  = maxfallofftemp(i);
-
         ctx.syncMode       = 3;
 
-        if (cuda_get_deviceinfo(&ctx, algo) != 0) {
+        if (cuda_get_deviceinfo(&ctx, algo, isCNv2) != 0) {
             continue;
         }
 
@@ -74,7 +70,7 @@ bool CudaCLI::setup(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo)
 }
 
 
-void CudaCLI::autoConf(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo)
+void CudaCLI::autoConf(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo, bool isCNv2)
 {
     if (m_count == 0) {
         return;
@@ -87,11 +83,9 @@ void CudaCLI::autoConf(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo)
         ctx.device_threads = -1;
         ctx.device_bfactor = bfactor();
         ctx.device_bsleep  = bsleep();
-        ctx.device_maxtemp  = maxtemp();
-        ctx.device_maxfallofftemp  = maxfallofftemp();
         ctx.syncMode       = 3;
 
-        if (cuda_get_deviceinfo(&ctx, algo) != 0) {
+        if (cuda_get_deviceinfo(&ctx, algo, isCNv2) != 0) {
             continue;
         }
 
@@ -165,7 +159,7 @@ int CudaCLI::get(const std::vector<int> &vector, int index, int defaultValue) co
         return defaultValue;
     }
 
-    if (vector.size() <= (std::size_t)index) {
+    if (vector.size() <= index) {
         return vector.back();
     }
 

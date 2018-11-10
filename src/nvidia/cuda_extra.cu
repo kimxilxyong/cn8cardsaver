@@ -331,6 +331,7 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, xmrig::Algo algo, size_t hashMemSi
         ctx_b_size *= 3;
         ctx->d_ctx_state2 = ctx->d_ctx_state;
     }
+
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_key1,     40 * sizeof(uint32_t) * wsize));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_key2,     40 * sizeof(uint32_t) * wsize));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_text,     32 * sizeof(uint32_t) * wsize));
@@ -340,15 +341,9 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, xmrig::Algo algo, size_t hashMemSi
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input,        21 * sizeof (uint32_t)));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_count, sizeof (uint32_t)));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_nonce, 10 * sizeof (uint32_t)));
-	//CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_long_state,   hashMemSize * wsize));
-	cudaError_t error = cudaMalloc(&ctx->d_long_state, hashMemSize * wsize);
-	if (error == 2) {
-		std::cerr << "[CUDA] Error " << error << " gpu " << ctx->device_id << ": <" << __FUNCTION__ << ">:" << __LINE__ << " \"" << cudaGetErrorString(error) << "\"" << std::endl << std::endl;
-		std::cerr << "try to reduce the number of threads with the --cuda-launch=Threads_x_Blocks switch" << std::endl;
-		std::cerr << "example --cuda-launch=28x45,TxB(GPU2),TxB(GPU3),... (Blocks 45 is a multiple of SMX 15)" << std::endl;
-		throw std::runtime_error(std::string("[CUDA] Error: ") + std::string(cudaGetErrorString(error)));
-	}
-	return 1;
+    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_long_state,   hashMemSize * wsize));
+
+    return 1;
 }
 
 
@@ -373,19 +368,6 @@ void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, xmrig::Al
         CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<xmrig::CRYPTONIGHT, xmrig::VARIANT_AUTO><<<grid, block >>>(wsize, ctx->d_input, ctx->inputlen, startNonce,
             ctx->d_ctx_state, ctx->d_ctx_state, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
     }
-
-	if (algo == xmrig::CRYPTONIGHT_HEAVY) {
-		CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_AUTO> << <grid, block >> > (wsize, ctx->d_input, ctx->inputlen, startNonce,
-			ctx->d_ctx_state, ctx->d_ctx_state2, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
-	}
-	else if (variant == xmrig::VARIANT_2) {
-		CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<xmrig::CRYPTONIGHT, xmrig::VARIANT_2> << <grid, block >> > (wsize, ctx->d_input, ctx->inputlen, startNonce,
-			ctx->d_ctx_state, ctx->d_ctx_state2, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
-	}
-	else {
-		CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<xmrig::CRYPTONIGHT, xmrig::VARIANT_AUTO> << <grid, block >> > (wsize, ctx->d_input, ctx->inputlen, startNonce,
-			ctx->d_ctx_state, ctx->d_ctx_state, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
-	}
 }
 
 void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, xmrig::Algo algo)
@@ -469,7 +451,7 @@ int cuda_get_runtime_version()
  *         4 = not enough memory
  *         5 = architecture not supported (not compiled for the gpu architecture)
  */
-int cuda_get_deviceinfo(nvid_ctx* ctx, xmrig::Algo algo)
+int cuda_get_deviceinfo(nvid_ctx* ctx, xmrig::Algo algo, bool isCNv2)
 {
     cudaError_t err;
     int version;
@@ -621,6 +603,18 @@ int cuda_get_deviceinfo(nvid_ctx* ctx, xmrig::Algo algo)
         if (props.major == 2 && ctx->device_threads > 64) {
             // Fermi gpus only support 512 threads per block (we need start 4 * configured threads)
             ctx->device_threads = 64;
+        }
+
+        if (isCNv2 && props.major < 6) {
+            // 4 based on my test maybe it must be adjusted later
+            size_t threads = 4;
+            // 8 is chosen by checking the occupancy calculator
+            size_t blockOptimal = 8 * ctx->device_mpcount;
+
+            if (blockOptimal * threads * hashMemSize < limitedMemory) {
+                ctx->device_threads = threads;
+                ctx->device_blocks = blockOptimal;
+            }
         }
 
     }

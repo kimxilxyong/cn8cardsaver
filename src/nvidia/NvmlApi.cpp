@@ -95,7 +95,7 @@ void NvmlApi::release()
 }
 
 
-bool NvmlApi::health(uint32_t id, Health &health)
+bool NvmlApi::health(int id, Health &health)
 {
     if (id == -1 || !isAvailable()) {
         return false;
@@ -126,29 +126,6 @@ bool NvmlApi::health(uint32_t id, Health &health)
     }
 
     return true;
-}
-
-bool NvmlApi::temp(size_t id, Health &health)
-{
-	if (id == -1 || !isAvailable()) {
-		return false;
-	}
-
-	health.reset();
-
-	nvmlDevice_t device;
-	if (pNvmlDeviceGetHandleByIndex && pNvmlDeviceGetHandleByIndex(id, &device) != NVML_SUCCESS) {
-		return false;
-	}
-
-	if (pNvmlDeviceGetTemperature) {
-		pNvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU, &health.temperature);
-	}
-	else {
-		return false;
-	}
-
-	return true;
 }
 
 

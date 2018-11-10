@@ -47,6 +47,22 @@ xmrig::Config::Config() : xmrig::CommonConfig(),
 }
 
 
+bool xmrig::Config::isCNv2() const
+{
+    if (algorithm().algo() != CRYPTONIGHT) {
+        return false;
+    }
+
+    for (const Pool &pool : pools()) {
+        if (pool.algorithm().variant() == VARIANT_2 || pool.algorithm().variant() == VARIANT_AUTO) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 bool xmrig::Config::reload(const char *json)
 {
     return xmrig::ConfigLoader::reload(this, json);
@@ -76,13 +92,10 @@ void xmrig::Config::getJSON(rapidjson::Document &doc) const
     doc.AddMember("colors",           isColors(), allocator);
     doc.AddMember("cuda-bfactor",     m_cudaCLI.bfactor(), allocator);
     doc.AddMember("cuda-bsleep",      m_cudaCLI.bsleep(), allocator);
-    doc.AddMember("max-gpu-temp",     m_cudaCLI.maxtemp(), allocator);
-    doc.AddMember("gpu-temp-falloff", m_cudaCLI.maxfallofftemp(), allocator);
-
-    LOG_INFO("******** m_cudaCLI.maxfallofftemp() %zu", m_cudaCLI.maxfallofftemp());
-
     doc.AddMember("cuda-max-threads", m_maxGpuThreads, allocator);
     doc.AddMember("donate-level",     donateLevel(), allocator);
+    doc.AddMember("max-gpu-temp",     maxtemp(), allocator);
+    doc.AddMember("gpu-temp-falloff", falloff(), allocator);    
     doc.AddMember("log-file",         logFile() ? Value(StringRef(logFile())).Move() : Value(kNullType).Move(), allocator);
 
     Value pools(kArrayType);
@@ -124,10 +137,10 @@ bool xmrig::Config::finalize()
         return false;
     }
 
-    if (m_threads.empty() && !m_cudaCLI.setup(m_threads, algorithm().algo())) {
+    if (m_threads.empty() && !m_cudaCLI.setup(m_threads, algorithm().algo(), isCNv2())) {
         m_autoConf   = true;
         m_shouldSave = true;
-        m_cudaCLI.autoConf(m_threads, algorithm().algo());
+        m_cudaCLI.autoConf(m_threads, algorithm().algo(), isCNv2());
 
         for (IThread *thread : m_threads) {
             static_cast<CudaThread *>(thread)->limit(m_maxGpuUsage, m_maxGpuThreads);
@@ -153,13 +166,6 @@ bool xmrig::Config::parseString(int key, const char *arg)
 
     case CudaBSleepKey: /* --cuda-bsleep */
         m_cudaCLI.parseBSleep(arg);
-        break;
-
-    case CudaMaxTempKey: /* Max temp per gpu */        
-        m_cudaCLI.parseMaxTemp(arg);
-        break;
-    case CudaTempFalloffKey:
-        m_cudaCLI.parseMaxFalloffTemp(arg);
         break;
 
     case CudaDevicesKey: /* --cuda-devices */

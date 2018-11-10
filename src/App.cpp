@@ -127,6 +127,9 @@ int App::exec()
     m_httpd->start();
 #   endif
 
+    Workers::setMaxtemp(m_controller->config()->maxtemp());
+    Workers::setFalloff(m_controller->config()->falloff());
+
     if (!Workers::start(m_controller)) {
         LOG_ERR("Failed to start threads");
         return 1;

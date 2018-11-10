@@ -29,7 +29,6 @@
 
 
 #include "common/xmrig.h"
-#include "common/log/Log.h"
 
 
 namespace xmrig {
@@ -43,8 +42,8 @@ class CudaCLI
 public:
     CudaCLI();
 
-    bool setup(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo);
-    void autoConf(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo);
+    bool setup(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo, bool isCNv2);
+    void autoConf(std::vector<xmrig::IThread *> &threads, xmrig::Algo algo, bool isCNv2);
     void parseDevices(const char *arg);
     void parseLaunch(const char *arg);
 
@@ -53,8 +52,6 @@ public:
     inline void parseAffinity(const char *arg) { parse(m_affinity, arg); }
     inline void parseBFactor(const char *arg)  { parse(m_bfactors, arg); }
     inline void parseBSleep(const char *arg)   { parse(m_bsleeps, arg); }
-    inline void parseMaxTemp(const char *arg)  { parse(m_maxtemp, arg); }
-    inline void parseMaxFalloffTemp(const char *arg)  { parse(m_maxfallofftemp, arg); }
 
     inline int bfactor(int index = 0) const
     {
@@ -74,23 +71,6 @@ public:
 #       endif
     }
 
-    inline int maxtemp(int index = 0) const
-    {
-#       ifdef _WIN32
-        return get(m_maxtemp, index, 25);
-#       else
-        return get(m_maxtemp, index, 0);
-#       endif
-    }
-    inline int maxfallofftemp(int index = 0) const
-    {
-#       ifdef _WIN32
-        return get(m_maxfallofftemp, index, 25);
-#       else
-        return get(m_maxfallofftemp, index, 0);
-#       endif
-    }
-
 private:
     inline int affinity(int index) const { return get(m_affinity, index, -1); }
     inline int blocks(int index) const   { return get(m_blocks, index, -1); }
@@ -105,8 +85,6 @@ private:
     std::vector<int> m_bfactors;
     std::vector<int> m_blocks;
     std::vector<int> m_bsleeps;
-    std::vector<int> m_maxtemp;
-    std::vector<int> m_maxfallofftemp;
     std::vector<int> m_devices;
     std::vector<int> m_threads;
 };

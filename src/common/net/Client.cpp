@@ -6,7 +6,6 @@
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
- * Copyright 2018-2019 kimxilxyong <https://github.com/kimxilxyong/cn8cardsaver>, kimxilxyong@gmail.com
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -76,8 +75,6 @@ Client::Client(int id, const char *agent, IClientListener *listener) :
     m_extensions(0),
     m_id(id),
     m_retries(5),
-    m_maxtemp(75),
-    m_maxfallofftemp(10),
     m_retryPause(5000),
     m_failures(0),
     m_recvBufPos(0),
@@ -251,9 +248,9 @@ int64_t Client::submit(const JobResult &result)
     doc.AddMember("params", params, allocator);
 
 #   ifdef XMRIG_PROXY_PROJECT
-    m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff(), result.id);
+    m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff(), result.id, result.temp, result.needscooling, result.card);
 #   else
-    m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff(), 0, result.deviceId );
+    m_results[m_sequence] = SubmitResult(m_sequence, result.diff, result.actualDiff(), 0, result.temp, result.needscooling, result.card);
 #   endif
 
     return send(doc);
@@ -318,8 +315,8 @@ bool Client::parseJob(const rapidjson::Value &params, int *code)
         *code = 2;
         return false;
     }
-    
-    Job job(m_id, m_nicehash, m_pool.algorithm(), m_rpcId);
+
+    Job job(m_id, m_nicehash, m_pool.algorithm(), m_rpcId, 0, false, -1);
 
     if (!job.setId(params["job_id"].GetString())) {
         *code = 3;
@@ -750,8 +747,6 @@ void Client::parseResponse(int64_t id, const rapidjson::Value &result, const rap
         auto it = m_results.find(id);
         if (it != m_results.end()) {
             it->second.done();
-            
-			LOG_DEBUG("***********it->second.threadId %zu", it->second.threadId);
             m_listener->onResultAccepted(this, it->second, message);
             m_results.erase(it);
         }
@@ -790,7 +785,6 @@ void Client::parseResponse(int64_t id, const rapidjson::Value &result, const rap
     auto it = m_results.find(id);
     if (it != m_results.end()) {
         it->second.done();
-		LOG_DEBUG("***********it->second.threadId ok %zu", it->second.threadId);
         m_listener->onResultAccepted(this, it->second, nullptr);
         m_results.erase(it);
     }

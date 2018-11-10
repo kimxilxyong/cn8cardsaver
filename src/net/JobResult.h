@@ -35,28 +35,31 @@
 class JobResult
 {
 public:
-    inline JobResult() : poolId(0), diff(0), nonce(0) {}
-    inline JobResult(int poolId, const xmrig::Id &jobId, uint32_t nonce, const uint8_t *result, uint32_t diff, const xmrig::Algorithm &algorithm, uint32_t deviceId) :
+    inline JobResult() : poolId(0), diff(0), nonce(0), card(-1) {}
+    inline JobResult(int poolId, const xmrig::Id &jobId, uint32_t nonce, const uint8_t *result, uint32_t diff, const xmrig::Algorithm &algorithm, int temp, bool needscooling, int card) :
         poolId(poolId),
         diff(diff),
         nonce(nonce),
         algorithm(algorithm),
         jobId(jobId),
-        deviceId(deviceId)
+        temp(temp),
+        needscooling(needscooling),
+        card(card)
     {
         memcpy(this->result, result, sizeof(this->result));
     }
 
 
-    inline JobResult(const Job &job) : poolId(0), diff(0), nonce(0), deviceId(0)
+    inline JobResult(const Job &job) : poolId(0), diff(0), nonce(0)
     {
         jobId     = job.id();
         poolId    = job.poolId();
         diff      = job.diff();
         nonce     = *job.nonce();
-        deviceId  = job.deviceId();
         algorithm = job.algorithm();
-        
+        temp      = job.temp();
+        needscooling = job.needscooling();
+        card      = job.card();
     }
 
 
@@ -65,15 +68,16 @@ public:
         return Job::toDiff(reinterpret_cast<const uint64_t*>(result)[3]);
     }
 
-    
+
     int poolId;
     uint32_t diff;
     uint32_t nonce;
     uint8_t result[32];
     xmrig::Algorithm algorithm;
     xmrig::Id jobId;
-    uint32_t deviceId;
-    
+    int temp;
+    bool needscooling;
+    int card;
 };
 
 #endif /* __JOBRESULT_H__ */

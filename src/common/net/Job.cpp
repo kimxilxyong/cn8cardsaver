@@ -8,7 +8,6 @@
  * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
  * Copyright 2018      SChernykh   <https://github.com/SChernykh>
  * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
- * Copyright 2018-2019 kimxilxyong <https://github.com/kimxilxyong/cn8cardsaver>, kimxilxyong@gmail.com
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -64,27 +63,31 @@ Job::Job() :
     m_nicehash(false),
     m_poolId(-2),
     m_threadId(-1),
-    m_deviceId(-1),
     m_size(0),
     m_diff(0),
     m_target(0),
-    m_blob()
+    m_blob(),
+    m_temp(0),
+	m_needscooling(false),
+	m_card(-1)
 {
 }
 
 
-Job::Job(int poolId, bool nicehash, const xmrig::Algorithm &algorithm, const xmrig::Id &clientId) :
+Job::Job(int poolId, bool nicehash, const xmrig::Algorithm &algorithm, const xmrig::Id &clientId, int temp, bool needscooling, int card ) :
     m_autoVariant(algorithm.variant() == xmrig::VARIANT_AUTO),
     m_nicehash(nicehash),
     m_poolId(poolId),
     m_threadId(-1),
-    m_deviceId(-1),
     m_size(0),
     m_diff(0),
     m_target(0),
     m_blob(),
     m_algorithm(algorithm),
-    m_clientId(clientId)
+    m_clientId(clientId),
+    m_temp(temp),
+	m_needscooling(needscooling),
+	m_card(card)
 {
 }
 

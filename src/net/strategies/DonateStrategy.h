@@ -43,7 +43,7 @@ class Url;
 class DonateStrategy : public IStrategy, public IStrategyListener
 {
 public:
-    DonateStrategy(int level, const char *user, int maxtemp, int maxfallofftemp, xmrig::Algo algo, xmrig::Variant variant, IStrategyListener *listener);
+    DonateStrategy(int level, const char *user, xmrig::Algo algo, IStrategyListener *listener);
     ~DonateStrategy();
 
 public:
@@ -70,8 +70,6 @@ private:
     bool m_active;
     const int m_donateTime;
     const int m_idleTime;
-    int m_maxtemp;
-    int m_maxfallofftemp;
     IStrategy *m_strategy;
     IStrategyListener *m_listener;
     std::vector<Pool> m_pools;

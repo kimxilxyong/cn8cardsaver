@@ -6,7 +6,6 @@
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
  * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
- * Copyright 2018-2019 kimxilxyong <https://github.com/kimxilxyong/cn8cardsaver>, kimxilxyong@gmail.com
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -44,7 +43,8 @@
 
 bool Workers::m_active = false;
 bool Workers::m_enabled = true;
-bool Workers::m_TempWasTooHigh = false;
+int Workers::m_maxtemp = 75;
+int Workers::m_falloff = 10;
 Hashrate *Workers::m_hashrate = nullptr;
 IJobResultListener *Workers::m_listener = nullptr;
 Job Workers::m_job;
@@ -142,21 +142,19 @@ void Workers::printHealth()
     Health health;
     for (const xmrig::IThread *t : m_controller->config()->threads()) {
         auto thread = static_cast<const CudaThread *>(t);
-        
         if (!NvmlApi::health(thread->nvmlId(), health)) {
             continue;
         }
-		LOG_DEBUG("****** thread->nvmlId() GPU %zu temp %zu", thread->nvmlId(), health.temperature);
-        
-		const uint32_t temp = health.temperature;
+
+        const uint32_t temp = health.temperature;
 
         if (health.clock && health.clock) {
             if (m_controller->config()->isColors()) {
-                LOG_INFO("\x1B[00;35mGPU #%d: \x1B[01m%u\x1B[00;35m/\x1B[01m%u MHz\x1B[00;35m \x1B[01m%uW\x1B[00;35m %s%uC\x1B[00;35m FAN \x1B[01m%u%%",
-                    thread->index(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed);
+                LOG_INFO("\x1B[00;35mGPU #%d: \x1B[01m%u\x1B[00;35m/\x1B[01m%u MHz\x1B[00;35m \x1B[01m%uW\x1B[00;35m %s%uC\x1B[00;35m FAN \x1B[01m%u%% Cooling %s Sleep %i",
+                    thread->index(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor() );
             }
             else {
-                LOG_INFO(" * GPU #%d: %u/%u MHz %uW %uC FAN %u%%", thread->index(), health.clock, health.memClock, health.power / 1000, health.temperature, health.fanSpeed);
+                LOG_INFO(" * GPU #%d: %u/%u MHz %uW %uC FAN %u%% Cooling %s Sleep %i", thread->index(), health.clock, health.memClock, health.power / 1000, health.temperature, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor());
             }
 
             continue;
@@ -188,6 +186,16 @@ void Workers::setEnabled(bool enabled)
     m_sequence++;
 }
 
+
+void Workers::setMaxtemp(int maxtemp)
+{
+    m_maxtemp = maxtemp;
+}
+
+void Workers::setFalloff(int falloff)
+{
+    m_falloff = falloff;
+}
 
 void Workers::setJob(const Job &job, bool donate)
 {
@@ -333,16 +341,11 @@ void Workers::onResult(uv_async_t *)
 
             cryptonight_ctx *ctx = CryptoNight::createCtx(baton->jobs[0].algorithm().algo());
 
-            LOG_DEBUG("********** CryptoNight::createCtx %zu", baton->jobs[0].threadId() );
-
             for (const Job &job : baton->jobs) {
                 JobResult result(job);
 
                 if (CryptoNight::hash(job, result, ctx)) {
-                    result.deviceId = job.deviceId();
                     baton->results.push_back(result);
-                    LOG_DEBUG("********** CryptoNight::hash %zu", job.threadId() );
-
                 }
                 else {
                     baton->errors++;
@@ -355,8 +358,6 @@ void Workers::onResult(uv_async_t *)
             JobBaton *baton = static_cast<JobBaton*>(req->data);
 
             for (const JobResult &result : baton->results) {
-                
-                LOG_DEBUG("********** CryptoNight::onJobResult %zu", result.m_threadId );
                 m_listener->onJobResult(result);
             }
 

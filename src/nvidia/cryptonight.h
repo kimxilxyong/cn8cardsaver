@@ -42,8 +42,6 @@ typedef struct {
     int device_bsleep;
     int device_clockRate;
     int device_memoryClockRate;
-    uint32_t device_maxtemp;
-    uint32_t device_maxfallofftemp;
     uint32_t device_pciBusID;
     uint32_t device_pciDeviceID;
     uint32_t device_pciDomainID;
@@ -67,7 +65,7 @@ typedef struct {
 
 int cuda_get_devicecount();
 int cuda_get_runtime_version();
-int cuda_get_deviceinfo(nvid_ctx *ctx, xmrig::Algo algo);
+int cuda_get_deviceinfo(nvid_ctx *ctx, xmrig::Algo algo, bool isCNv2);
 int cryptonight_gpu_init(nvid_ctx *ctx, xmrig::Algo algo);
 void cryptonight_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len);
 void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, xmrig::Algo algo, xmrig::Variant variant);

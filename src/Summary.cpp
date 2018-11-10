@@ -102,16 +102,14 @@ static void print_commands(xmrig::Config *config)
     }
 }
 
-
 static void print_maxtemp(xmrig::Config *config)
 {
     if (config->isColors()) {
-        Log::i()->text(GREEN_BOLD(" * ") WHITE_BOLD("MAX TEMP     ") YELLOW("%zu") WHITE_BOLD(" Celsius,") YELLOW(" %zu") WHITE_BOLD(" Celsius Max Temp falloff"),config->maxtemp(), config->maxfallofftemp());
-    }
+        Log::i()->text(GREEN_BOLD(" * ") WHITE_BOLD("MAX TEMP     ") YELLOW("%zu") WHITE_BOLD(" Celsius,") YELLOW(" %zu") WHITE_BOLD(" Celsius Max Temp falloff"), config->maxtemp(), config->falloff());
+        }
     else {
-        Log::i()->text(" * MAX TEMP     %zu Celsius %zu Max Temp falloff", config->maxtemp());
+        Log::i()->text(" * MAX TEMP     %zu Celsius %zu Max Temp falloff", config->maxtemp(), config->falloff());
     }
-    
 }
 
 void Summary::print(xmrig::Controller *controller)

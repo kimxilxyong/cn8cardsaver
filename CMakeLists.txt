@@ -61,6 +61,7 @@ set(HEADERS
     src/nvidia/CudaCLI.h
     src/nvidia/Health.h
     src/nvidia/NvmlApi.h
+    src/nvidia/NvmlUtils.h
     src/Summary.h
     src/version.h
     src/workers/CudaWorker.h
@@ -119,6 +120,7 @@ set(SOURCES
     src/net/Network.cpp
     src/net/strategies/DonateStrategy.cpp
     src/nvidia/CudaCLI.cpp
+    src/nvidia/NvmlUtils.cpp
     src/Summary.cpp
     src/workers/CudaWorker.cpp
     src/workers/CudaThread.cpp

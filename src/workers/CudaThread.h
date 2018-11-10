@@ -38,6 +38,9 @@ public:
     CudaThread(const nvid_ctx &ctx, int64_t affinity, xmrig::Algo algorithm);
     CudaThread(const rapidjson::Value &object);
 
+    bool m_NeedsCooling;
+    int m_SleepFactor;
+
     bool init(xmrig::Algo algorithm);
     void limit(int maxUsage, int maxThreads);
 
@@ -46,8 +49,6 @@ public:
     inline int bfactor() const            { return m_bfactor; }
     inline int blocks() const             { return m_blocks; }
     inline int bsleep() const             { return m_bsleep; }
-    inline int maxtemp() const            { return m_maxtemp; }
-    inline int maxfallofftemp() const     { return m_maxfallofftemp; }
     inline int clockRate() const          { return m_clockRate; }
     inline int memoryClockRate() const    { return m_memoryClockRate; }
     inline int nvmlId() const             { return m_nvmlId; }
@@ -66,6 +67,9 @@ public:
     inline size_t index() const override          { return m_index; }
     inline Type type() const override             { return CUDA; }
 
+    inline bool NeedsCooling() const { return m_NeedsCooling; }
+    inline int SleepFactor() const { return m_SleepFactor; }
+
     inline void setAffinity(int affinity)      { m_affinity = affinity; }
     inline void setBFactor(int bfactor)        { if (bfactor >= 0 && bfactor <= 12) { m_bfactor = bfactor; } }
     inline void setBlocks(int blocks)          { m_blocks = blocks; }
@@ -75,6 +79,10 @@ public:
     inline void setThreadId(size_t threadId)   { m_threadId = threadId; }
     inline void setThreads(int threads)        { m_threads = threads; }
     inline void setSyncMode(uint32_t syncMode) { m_syncMode = syncMode > 3 ? 3 : syncMode; }
+
+    inline void setNeedsCooling(bool NeedsCooling) { m_NeedsCooling = NeedsCooling; }
+    inline void setSleepFactor(int SleepFactor) { m_SleepFactor = SleepFactor; }
+    
 
 protected:
 #   ifdef APP_DEBUG
@@ -93,8 +101,6 @@ private:
     int m_bfactor;
     int m_blocks;
     int m_bsleep;
-    int m_maxtemp;
-    int m_maxfallofftemp;
     int m_clockRate;
     int m_memoryClockRate;
     int m_nvmlId;

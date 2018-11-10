@@ -42,7 +42,6 @@ class CudaWorker : public IWorker
 {
 public:
     CudaWorker(Handle *handle);
-    ~CudaWorker();
 
 protected:
     inline uint64_t hashCount() const override { return m_hashCount.load(std::memory_order_relaxed); }
@@ -54,13 +53,16 @@ protected:
 
 private:
     bool resume(const Job &job);
-	bool isTooHot();
-	void consumeJob();
+    void consumeJob();
     void save(const Job &job);
     void setJob();
     void storeStats();
+
     const size_t m_id;
     const size_t m_threads;
+
+    CudaThread *m_thread;
+
     const xmrig::Algo m_algorithm;
     Job m_job;
     Job m_pausedJob;

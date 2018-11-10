@@ -28,11 +28,9 @@
 #include "common/Platform.h"
 
 
-FailoverStrategy::FailoverStrategy(const std::vector<Pool> &urls, int retryPause, int retries, int maxtemp, int maxfallofftemp, IStrategyListener *listener, bool quiet) :
+FailoverStrategy::FailoverStrategy(const std::vector<Pool> &urls, int retryPause, int retries, IStrategyListener *listener, bool quiet) :
     m_quiet(quiet),
     m_retries(retries),
-    m_maxtemp(maxtemp),
-    m_maxfallofftemp(maxfallofftemp),
     m_retryPause(retryPause),
     m_active(-1),
     m_index(0),
@@ -160,8 +158,6 @@ void FailoverStrategy::add(const Pool &pool)
     Client *client = new Client((int) m_pools.size(), Platform::userAgent(), this);
     client->setPool(pool);
     client->setRetries(m_retries);
-    client->setMaxTemp(m_maxtemp);
-    client->setMaxfallofftemp(m_maxfallofftemp);
     client->setRetryPause(m_retryPause * 1000);
     client->setQuiet(m_quiet);
 

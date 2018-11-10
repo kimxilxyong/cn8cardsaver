@@ -52,7 +52,6 @@ public:
     static Job job();
     static size_t hugePages();
     static size_t threads();
-    
     static void printHashrate(bool detail);
     static void printHealth();
     static void setEnabled(bool enabled);
@@ -61,15 +60,19 @@ public:
     static void stop();
     static void submit(const Job &result);
 
+    static void setMaxtemp(int maxtemp);
+    static void setFalloff(int falloff);
+
     static inline bool isEnabled()                               { return m_enabled; }
     static inline bool isOutdated(uint64_t sequence)             { return m_sequence.load(std::memory_order_relaxed) != sequence; }
     static inline bool isPaused()                                { return m_paused.load(std::memory_order_relaxed) == 1; }
     static inline Hashrate *hashrate()                           { return m_hashrate; }
     static inline uint64_t sequence()                            { return m_sequence.load(std::memory_order_relaxed); }
-    static inline bool TempWasTooHigh()                          { return m_TempWasTooHigh; }
     static inline void pause()                                   { m_active = false; m_paused = 1; m_sequence++; }
     static inline void setListener(IJobResultListener *listener) { m_listener = listener; }
-    static inline void setTempWasTooHigh(bool WasTooHigh)        { m_TempWasTooHigh = WasTooHigh; }
+
+	static inline int maxtemp() { return m_maxtemp; }
+	static inline int falloff() { return m_falloff; }
 
 #   ifndef XMRIG_NO_API
     static void threadsSummary(rapidjson::Document &doc);
@@ -92,7 +95,6 @@ private:
     static std::atomic<uint64_t> m_sequence;
     static std::list<Job> m_queue;
     static std::vector<Handle*> m_workers;
-    static bool m_TempWasTooHigh;
     static uint64_t m_ticks;
     static uv_async_t m_async;
     static uv_mutex_t m_mutex;
@@ -100,6 +102,10 @@ private:
     static uv_timer_t m_reportTimer;
     static uv_timer_t m_timer;
     static xmrig::Controller *m_controller;
+
+    static int m_maxtemp;
+    static int m_falloff;
+    static int m_workercount;
 };
 
 
