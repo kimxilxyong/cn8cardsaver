@@ -27,5 +27,9 @@
 int main(int argc, char **argv) {
     App app(argc, argv);
 
-    return app.exec();
+#if defined(_WIN64) || defined(_WIN32)
+    _exit( app.exec() );
+#else
+    return( app.exec() );
+#endif
 }
