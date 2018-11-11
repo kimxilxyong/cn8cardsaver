@@ -26,7 +26,7 @@
 #include <cmath>
 #include <thread>
 
-#include <CL/cl_ext.h>
+//#include <CL/cl_ext.h>
 
 #include "nvidia/NvmlUtils.h"
 #include "nvidia/NvmlApi.h"
@@ -75,8 +75,9 @@ bool NvmlUtils::DoCooling(int deviceIdx, CoolingContext *cool)
                 cool->SleepFactor = cool->SleepFactor * 2;
                 if (cool->SleepFactor > 10000) {
                     cool->SleepFactor = 10000;
+                    LOG_WARN("Card %u Temperature %i iSleepFactor %i LastTemp %i NeedCooling %i lower temp %i", deviceIdx, cool->Temp, cool->SleepFactor, cool->LastTemp, cool->NeedsCooling, Workers::maxtemp() - Workers::falloff());
                 }
-                //LOG_INFO("Card %u Temperature %i iSleepFactor %i LastTemp %i NeedCooling %i ", deviceIdx, temp, cool->SleepFactor, cool->LastTemp, cool->NeedCooling);
+                
             }
             cool->LastTemp = cool->Temp;
         }
