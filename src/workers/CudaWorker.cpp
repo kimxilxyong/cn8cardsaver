@@ -65,6 +65,7 @@ CudaWorker::CudaWorker(Handle *handle) :
 void CudaWorker::start()
 {
     CoolingContext cool;
+    cool.SleepFactor = 0;
 
     if (cuda_get_deviceinfo(&m_ctx, m_algorithm, false) != 0 || cryptonight_gpu_init(&m_ctx, m_algorithm) != 1) {
         LOG_ERR("Setup failed for GPU %zu. Exitting.", m_id);
@@ -86,6 +87,9 @@ void CudaWorker::start()
         }
 
         NvmlUtils::DoCooling(m_id, &cool);
+        m_thread->setNeedsCooling(cool.NeedsCooling);
+        m_thread->setSleepFactor( cool.SleepFactor);
+
 
         cryptonight_extra_cpu_set_data(&m_ctx, m_blob, m_job.size());
 
@@ -93,7 +97,7 @@ void CudaWorker::start()
 
             NvmlUtils::DoCooling(m_id, &cool);
             m_thread->setNeedsCooling(cool.NeedsCooling);
-            m_thread->m_SleepFactor = cool.SleepFactor;
+            m_thread->setSleepFactor( cool.SleepFactor);
 
             uint32_t foundNonce[10];
             uint32_t foundCount;
