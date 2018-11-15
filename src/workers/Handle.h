@@ -27,10 +27,12 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <vector>
 #include <uv.h>
 
 
 #include "interfaces/IThread.h"
+#include "workers/CudaThread.h"
 
 
 class IWorker;
@@ -47,8 +49,12 @@ public:
     inline size_t threadId() const         { return m_threadId; }
     inline size_t totalWays() const        { return m_totalWays; }
     inline uint32_t offset() const         { return m_offset; }
+    inline const std::vector<xmrig::IThread *> &threadsList() const { return m_threadsList; }
     inline void setWorker(IWorker *worker) { assert(worker != nullptr); m_worker = worker; }
+    //inline void setThreads(std::vector<CudaThread *> threads) {m_threads = threads; }
     inline xmrig::IThread *config() const  { return m_config; }
+
+    inline void setThreadList(std::vector<xmrig::IThread *> threadsList) { m_threadsList = threadsList; }
 
 private:
     IWorker *m_worker;
@@ -57,6 +63,7 @@ private:
     uint32_t m_offset;
     uv_thread_t m_thread;
     xmrig::IThread *m_config;
+    std::vector<xmrig::IThread *> m_threadsList;
 };
 
 

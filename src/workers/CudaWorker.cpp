@@ -34,6 +34,7 @@
 #include "workers/Handle.h"
 #include "workers/Workers.h"
 #include "nvidia/NvmlUtils.h"
+#include "nvidia/NvmlApi.h"
 
 CudaWorker::CudaWorker(Handle *handle) :
     m_id(handle->threadId()),
@@ -45,19 +46,35 @@ CudaWorker::CudaWorker(Handle *handle) :
     m_sequence(0),
     m_blob()
 {
-    const CudaThread *thread = static_cast<CudaThread *>(handle->config());
-    
     m_thread = static_cast<CudaThread *>(handle->config());
+    m_threadList = handle->threadsList();
+    
+    //setThreadList(handle->threadsList());
+    //m_threadsList = handle->threadsList();
 
-    m_ctx.device_id      = static_cast<int>(thread->index());
-    m_ctx.device_blocks  = thread->blocks();
-    m_ctx.device_threads = thread->threads();
-    m_ctx.device_bfactor = thread->bfactor();
-    m_ctx.device_bsleep  = thread->bsleep();
-    m_ctx.syncMode       = thread->syncMode();
+    /*
+    uv_rwlock_t m_rwlock;
+    uv_rwlock_init(&m_rwlock);
+    uv_rwlock_rdlock(&m_rwlock);
+    
+    for (const xmrig::IThread *t : handle->threadsList()) {
+        auto thread = static_cast<const CudaThread *>(t);
+        LOG_INFO("****** m_id %i, nvmlId %i index %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", m_id, thread->nvmlId() ,thread->index() , thread->pciDeviceID(),thread->pciBusID(), thread->pciDomainID());
+    }
+    LOG_INFO("XXXX m_id %i, nvmlId %i index %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", m_id, m_thread->nvmlId(), m_thread->index(), m_thread->pciDeviceID(), m_thread->pciBusID(), m_thread->pciDomainID());
+    
+    uv_rwlock_rdunlock(&m_rwlock);
+    */
 
-    if (thread->affinity() >= 0) {
-        Platform::setThreadAffinity(static_cast<uint64_t>(thread->affinity()));
+    m_ctx.device_id      = static_cast<int>(m_thread->index());
+    m_ctx.device_blocks  = m_thread->blocks();
+    m_ctx.device_threads = m_thread->threads();
+    m_ctx.device_bfactor = m_thread->bfactor();
+    m_ctx.device_bsleep  = m_thread->bsleep();
+    m_ctx.syncMode       = m_thread->syncMode();
+
+    if (m_thread->affinity() >= 0) {
+        Platform::setThreadAffinity(static_cast<uint64_t>(m_thread->affinity()));
     }
 }
 
@@ -86,7 +103,18 @@ void CudaWorker::start()
             consumeJob();
         }
 
-        NvmlUtils::DoCooling(m_id, &cool);
+        int DId;
+
+        DId = m_id;
+
+        if (m_id != m_thread->nvmlId()) {
+            //NvmlApi::bind(
+            DId = NvmlApi::get_deviceid_by_pci( m_thread, m_threadList);
+            LOG_INFO("get_deviceid_by_pci DeviceId %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", DId,  m_thread->pciDeviceID(), m_thread->pciBusID(), m_thread->pciDomainID());
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        }
+
+        NvmlUtils::DoCooling(DId, &cool, m_thread, m_threadList);
         m_thread->setNeedsCooling(cool.NeedsCooling);
         m_thread->setSleepFactor( cool.SleepFactor);
 
@@ -95,7 +123,7 @@ void CudaWorker::start()
 
         while (!Workers::isOutdated(m_sequence)) {
 
-            NvmlUtils::DoCooling(m_id, &cool);
+            NvmlUtils::DoCooling(DId, &cool, m_thread, m_threadList);
             m_thread->setNeedsCooling(cool.NeedsCooling);
             m_thread->setSleepFactor( cool.SleepFactor);
 
@@ -111,7 +139,7 @@ void CudaWorker::start()
                 m_job.setTemp(cool.Temp);
 				m_job.setNeedscooling(cool.NeedsCooling);
 				m_job.setSleepFactor(cool.SleepFactor);
-				m_job.setCard(m_id);
+				m_job.setCard(DId);
                 Workers::submit(m_job);
             }
 

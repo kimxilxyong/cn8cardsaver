@@ -27,6 +27,7 @@
 
 #include "nvidia/NvmlApi.h"
 #include "workers/CudaThread.h"
+#include "common/log/Log.h"
 
 
 static uv_lib_t nvmlLib;
@@ -165,4 +166,57 @@ void NvmlApi::bind(const std::vector<xmrig::IThread*> &threads)
             }
         }
     }
+}
+
+int NvmlApi::get_deviceid_by_pci_old( CudaThread * thread, const std::vector<xmrig::IThread*> &threads)
+{
+    if (!isAvailable() || !pNvmlDeviceGetCount || !pNvmlDeviceGetHandleByIndex || !pNvmlDeviceGetPciInfo) {
+        return -1;
+    }
+
+    uint32_t count = 0;
+    if (pNvmlDeviceGetCount(&count) != NVML_SUCCESS) {
+        return -2;
+    }
+
+    for (uint32_t i = 0; i < count; i++) {
+        nvmlDevice_t device;
+        if (pNvmlDeviceGetHandleByIndex(i, &device) != NVML_SUCCESS) {
+            continue;
+        }
+
+        nvmlPciInfo_t pci;
+        if (pNvmlDeviceGetPciInfo(device, &pci) != NVML_SUCCESS) {
+            continue;
+        }
+
+        int result = -1;
+        int m_id = 0;
+        for (xmrig::IThread *t : threads) {
+            auto threadGlobal = static_cast<CudaThread *>(t);
+            if (threadGlobal->pciBusID() == pci.bus && threadGlobal->pciDeviceID() == pci.device && threadGlobal->pciDomainID() == pci.domain) {
+                result = thread->nvmlId();
+                LOG_INFO("FOUND threadGlobal m_id %i, nvmlId %i index %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", i, threadGlobal->nvmlId(), threadGlobal->index(), threadGlobal->pciDeviceID(), threadGlobal->pciBusID(), threadGlobal->pciDomainID());
+                LOG_INFO("FOUND threadLocal m_id %i, nvmlId %i index %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", m_id, thread->nvmlId(), thread->index(), thread->pciDeviceID(), thread->pciBusID(), thread->pciDomainID());
+                break;
+            }
+            m_id++;
+        }
+        return result;
+    }
+}
+
+int NvmlApi::get_deviceid_by_pci( CudaThread * thread, const std::vector<xmrig::IThread*> &threads)
+{
+    int result = -1;
+    for (xmrig::IThread *t : threads) {
+        auto threadGlobal = static_cast<CudaThread *>(t);
+        if (threadGlobal->pciBusID() == thread->pciBusID() && threadGlobal->pciDeviceID() == thread->pciDeviceID() && threadGlobal->pciDomainID() == thread->pciDomainID()) {
+            result = threadGlobal->nvmlId();
+            LOG_DEBUG("FOUND threadGlobal m_id %i, nvmlId %i index %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", threadGlobal->index(), threadGlobal->nvmlId(), threadGlobal->index(), threadGlobal->pciDeviceID(), threadGlobal->pciBusID(), threadGlobal->pciDomainID());
+            LOG_DEBUG("FOUND threadLocal m_id %i, nvmlId %i index %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", thread->index(), thread->nvmlId(), thread->index(), thread->pciDeviceID(), thread->pciBusID(), thread->pciDomainID());
+            break;
+        }
+    }
+    return result;
 }

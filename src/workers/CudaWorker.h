@@ -27,12 +27,15 @@
 
 
 #include <atomic>
+#include <vector>
 
 
 #include "common/net/Job.h"
 #include "interfaces/IWorker.h"
 #include "net/JobResult.h"
 #include "nvidia/cryptonight.h"
+#include "interfaces/IThread.h"
+#include "workers/CudaThread.h"
 
 
 class Handle;
@@ -61,6 +64,7 @@ private:
     const size_t m_id;
     const size_t m_threads;
 
+    std::vector<xmrig::IThread *> m_threadList;
     CudaThread *m_thread;
 
     const xmrig::Algo m_algorithm;

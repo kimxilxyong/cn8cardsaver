@@ -134,6 +134,11 @@ void Workers::printHashrate(bool detail)
 
 void Workers::printHealth()
 {
+    
+    uv_rwlock_rdlock(&m_rwlock);
+      
+    
+    
     if (!NvmlApi::isAvailable()) {
         LOG_ERR("NVML GPU monitoring is not available");
         return;
@@ -146,15 +151,17 @@ void Workers::printHealth()
             continue;
         }
 
+        assert(thread != nullptr);
+
         const uint32_t temp = health.temperature;
 
         if (health.clock && health.clock) {
             if (m_controller->config()->isColors()) {
-                LOG_INFO("\x1B[00;35mGPU #%d: \x1B[01m%u\x1B[00;35m/\x1B[01m%u MHz\x1B[00;35m \x1B[01m%uW\x1B[00;35m %s%uC\x1B[00;35m FAN \x1B[01m%u%% Cooling %s Sleep %i",
-                    thread->index(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor() );
+                LOG_INFO("\x1B[00;35mGPU #%i: " YELLOW("PCI:%04x:%02x:%02x") " Nvml %i \x1B[01m\x1B[00;35m%u/\x1B[01m%u MHz\x1B[00;35m \x1B[01m%uW\x1B[00;35m %s%uC\x1B[00;35m FAN \x1B[01m%u%% Cooling %s Sleep %i",
+                    thread->index(), thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID(), thread->nvmlId(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor() );                     
             }
             else {
-                LOG_INFO(" * GPU #%d: %u/%u MHz %uW %uC FAN %u%% Cooling %s Sleep %i", thread->index(), health.clock, health.memClock, health.power / 1000, health.temperature, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor());
+                LOG_INFO(" * GPU #%i:%i Nvml %i %u/%u MHz %uW %uC FAN %u%% Cooling %s Sleep %i", thread->index(), thread->pciBusID(), thread->nvmlId(), health.clock, health.memClock, health.power / 1000, health.temperature, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor());
             }
 
             continue;
@@ -168,6 +175,8 @@ void Workers::printHealth()
             LOG_INFO(" * GPU #%d: %uC FAN %u%%", thread->index(), health.temperature, health.fanSpeed);
         }
     }
+    
+    uv_rwlock_rdunlock(&m_rwlock);
 }
 
 
@@ -240,10 +249,15 @@ bool Workers::start(xmrig::Controller *controller)
 
     uint32_t offset = 0;
 
+    const std::vector<xmrig::IThread *> &threadsList = controller->config()->threads();
+
     size_t i = 0;
     for (xmrig::IThread *thread : threads) {
         Handle *handle = new Handle(i, thread, offset, ways);
         offset += static_cast<size_t>(thread->multiway());
+
+        handle->setThreadList(threads);
+
         i++;
 
         m_workers.push_back(handle);

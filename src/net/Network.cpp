@@ -154,28 +154,17 @@ void Network::onResultAccepted(IStrategy *strategy, Client *client, const Submit
     m_state.add(result, error);
 
     if (error) {
-		if (result.needscooling) {
-			LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms) card %i temp %i needs cooling TRUE"
-				                : "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) card %i temp %i needs cooling TRUE",
-                 m_state.accepted, m_state.rejected, result.diff, error, result.elapsed, result.card, result.temp);
-		} 
-		else {
-			LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms) card %i temp %i needs cooling FALSE"
-				: "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) card %i temp %i needs cooling FALSE",
-				m_state.accepted, m_state.rejected, result.diff, error, result.elapsed, result.card, result.temp);
-		}
+
+        LOG_INFO(isColors() ? "\x1B[01;31mrejected\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[31m\"%s\"\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " WHITE("card %i temp %i needs cooling %s")
+                            : "rejected (%" PRId64 "/%" PRId64 ") diff %u \"%s\" (%" PRIu64 " ms) card %i temp %i needs cooling %s",
+            m_state.accepted, m_state.rejected, result.diff, error, result.elapsed, result.card, result.temp, (result.needscooling ? "TRUE" : "FALSE" ));
     }
     else {
-		if (result.needscooling) {
-			LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms) card %i temp %i needs cooling TRUE"
-				: "accepted (%" PRId64 "/%" PRId64 ") diff %u (%" PRIu64 " ms) card %i temp %i needs cooling TRUE",
-				m_state.accepted, m_state.rejected, result.diff, result.elapsed, result.card, result.temp);
-		}
-		else {
-			LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms) card %i temp %i needs cooling FALSE"
-				: "accepted (%" PRId64 "/%" PRId64 ") diff %u (%" PRIu64 " ms) card %i temp %i needs cooling FALSE",
-				m_state.accepted, m_state.rejected, result.diff, result.elapsed, result.card, result.temp);
-		}
+		
+        LOG_INFO(isColors() ? "\x1B[01;32maccepted\x1B[0m (%" PRId64 "/%" PRId64 ") diff \x1B[01;37m%u\x1B[0m \x1B[01;30m(%" PRIu64 " ms) " WHITE(" card %i temp %i needs cooling %s")
+            : "accepted (%" PRId64 "/%" PRId64 ") diff %u (%" PRIu64 " ms) card %i temp %i needs cooling %s",
+            m_state.accepted, m_state.rejected, result.diff, result.elapsed, result.card, result.temp, (result.needscooling ? "TRUE" : "FALSE" ));
+    
     }
 }
 

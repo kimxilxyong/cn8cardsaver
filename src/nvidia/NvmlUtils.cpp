@@ -34,6 +34,7 @@
 
 #include "common/log/Log.h"
 #include "workers/Workers.h"
+#include "workers/CudaThread.h"
 
 
 bool NvmlUtils::Temperature(int id, CoolingContext *cool)
@@ -49,24 +50,24 @@ bool NvmlUtils::Temperature(int id, CoolingContext *cool)
     return false;
 }
 
-bool NvmlUtils::DoCooling(int deviceIdx, CoolingContext *cool)
+bool NvmlUtils::DoCooling(int id, CoolingContext *cool, CudaThread * thread, std::vector<xmrig::IThread*> &threads)
 {
 	const int StartSleepFactor = 10;
 
-	if (NvmlUtils::Temperature(deviceIdx, cool)) {
+	if (NvmlUtils::Temperature(id, cool)) {
 
         //LOG_INFO("Card %u Temperature %i iSleepFactor %i LastTemp %i NeedCooling %i ", deviceIdx, cool->Temp, cool->SleepFactor, cool->LastTemp, cool->NeedsCooling);
 
 	    if (cool->Temp > Workers::maxtemp()) {
             if (!cool->NeedsCooling) {
                 cool->SleepFactor = StartSleepFactor;
-                LOG_INFO("Card %u temperature %u is over %i, reduced mining, sleep time %i", deviceIdx, cool->Temp, Workers::maxtemp(), cool->SleepFactor);
+                LOG_INFO("Card %u temperature %u is over %i, reduced mining, sleep time %i", id, cool->Temp, Workers::maxtemp(), cool->SleepFactor);
             }
             cool->NeedsCooling = true;
         }
         if (cool->NeedsCooling) {
             if (cool->Temp < Workers::maxtemp() - Workers::falloff()) {
-                LOG_INFO("Card %u temperature %i is below %i, do full mining, sleeptime was %u", deviceIdx, cool->Temp, Workers::maxtemp() - Workers::falloff(), cool->SleepFactor);
+                LOG_INFO("Card %u temperature %i is below %i, do full mining, sleeptime was %u", id, cool->Temp, Workers::maxtemp() - Workers::falloff(), cool->SleepFactor);
                 cool->LastTemp = cool->Temp;
                 cool->NeedsCooling = false;
                 cool->SleepFactor = StartSleepFactor;
@@ -75,7 +76,7 @@ bool NvmlUtils::DoCooling(int deviceIdx, CoolingContext *cool)
                 cool->SleepFactor = cool->SleepFactor * 2;
                 if (cool->SleepFactor > 10000) {
                     cool->SleepFactor = 10000;
-                    LOG_WARN("Card %u Temperature %i iSleepFactor %i LastTemp %i NeedCooling %i lower temp %i", deviceIdx, cool->Temp, cool->SleepFactor, cool->LastTemp, cool->NeedsCooling, Workers::maxtemp() - Workers::falloff());
+                    LOG_WARN("Card %u NvmlId %i Temperature %i iSleepFactor %i LastTemp %i NeedCooling %i lower temp %i sleeping too long", id, thread->nvmlId(), cool->Temp, cool->SleepFactor, cool->LastTemp, cool->NeedsCooling, Workers::maxtemp() - Workers::falloff());
                 }
                 
             }
@@ -90,8 +91,13 @@ bool NvmlUtils::DoCooling(int deviceIdx, CoolingContext *cool)
                 iReduceMining = iReduceMining - 1;
             } while ((iReduceMining > 0) && (Workers::sequence() > 0));
         }
+        else {
+            cool->SleepFactor = 0;
+        }
         return true;
     }
 	return false;
 }
+
+
 

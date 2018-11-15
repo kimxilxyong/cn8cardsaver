@@ -4,6 +4,7 @@
 #ifndef __NVMLUTILS_H__
 #define __NVMLUTILS_H__
 
+#include "workers/CudaThread.h"
 
 typedef struct _CoolingContext {
 	int SleepFactor = 0;
@@ -19,7 +20,7 @@ public:
 
 	//static GpuContext *m_ctx;
 	static bool Temperature(int id, CoolingContext *cool);
-	static bool DoCooling(int deviceIdx, CoolingContext *cool);
+	static bool DoCooling(int id, CoolingContext *cool, CudaThread * thread, std::vector<xmrig::IThread*> &threads);
 };
 
 
