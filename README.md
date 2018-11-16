@@ -1,7 +1,5 @@
 # CN8CardSaver for NVIDIA GPUs
 
-:warning: **[Monero will change PoW algorithm on October 18](https://github.com/xmrig/xmrig/issues/753), all miners should be updated to [v1.0.3+](https://github.com/kimxilxyong/cn8cardsaver/releases/tag/v1.0.2)** :warning:
-
 CN8CardSaver is a high performance Monero (XMR) NVIDIA miner forked from XMRig-nvidia.
 
 cn8cardsaver (CryptoNight V1/2) is a miner for Monero XMR with GPU temperature control support. With it you can keep your expensive cards save.
@@ -21,7 +19,6 @@ Temperature control:
 * [Features](#features)
 * [Download](#download)
 * [Usage](#usage)
-* [Build](https://github.com/xmrig/xmrig-nvidia/wiki/Build)
 * [Donations](#donations)
 * [Release checksums](#release-checksums)
 * [Contacts](#contacts)
