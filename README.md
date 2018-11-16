@@ -1,12 +1,10 @@
 # CN8CardSaver for NVIDIA GPUs
 
-:warning: **[Monero will change PoW algorithm on October 18](https://github.com/xmrig/xmrig/issues/753), all miners should be updated to [v1.0.3+](https://github.com/kimxilxyong/cn8cardsaver/releases/tag/v1.0.2)** :warning:
-
 CN8CardSaver is a high performance Monero (XMR) NVIDIA miner forked from XMRig-nvidia.
 
 cn8cardsaver (CryptoNight V1/2) is a miner for Monero XMR with GPU temperature control support. With it you can keep your expensive cards save.
 Keep it below 65 C to be on the safe side. If it gets to 80 C or above you are damaging your card.
-Use the switches ```--max-gpu-temp=65 and --gpu-temp-falloff=9```
+Use the options ```--max-gpu-temp=65 and --gpu-temp-falloff=9```
 
 GPU mining part based on [psychocrypt](https://github.com/psychocrypt) code used in xmr-stak-nvidia.
 
@@ -17,13 +15,25 @@ Temperature control:
       --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
 ```
 
+#### Supported algorithms
+* CryptoNight (Monero)
+* CryptoNight-Lite
+* CryptoNight-Heavy
+* Original CryptoNight or CryptoNight-Heavy
+* CryptoNight variant 1 also known as Monero7 and CryptoNightV7
+* Modified CryptoNight-Heavy (TUBE only)
+* Modified CryptoNight variant 1 (Stellite only)
+* Modified CryptoNight variant 1 (Masari only)
+* Modified CryptoNight-Heavy (Haven Protocol only)
+* Modified CryptoNight variant 0 (Alloy only)
+* Modified CryptoNight variant 1 (Arto only)
+* CryptoNight variant 2
+
 #### Table of contents
 * [Features](#features)
 * [Download](#download)
 * [Usage](#usage)
-* [Build](https://github.com/xmrig/xmrig-nvidia/wiki/Build)
 * [Donations](#donations)
-* [Release checksums](#release-checksums)
 * [Contacts](#contacts)
 
 ## Features
@@ -38,9 +48,9 @@ Temperature control:
 * It's open source software.
 
 ## Download
-* Binary releases: https://github.com/kimxilxyong/cn8cardsaver/releases
-* Git tree: https://github.com/kimxilxyong/cn8cardsaver.git
-* Clone with `git clone https://github.com/kimxilxyong/cn8cardsaver.git`  :hammer: [Build instructions](https://github.com/xmrig/xmrig-nvidia/wiki/Build).
+* Binary releases: https://github.com/kimxilxyong/cn8cardsaver-nvidia/releases
+* Git tree: https://github.com/kimxilxyong/cn8cardsaver-nvidia.git
+* Clone with `git clone https://github.com/kimxilxyong/cn8cardsaver-nvidia.git`
 
 ## Usage
 Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or share configurations.
