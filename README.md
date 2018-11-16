@@ -15,6 +15,20 @@ Temperature control:
       --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
 ```
 
+#### Supported algorithms
+* CryptoNight (Monero)
+* CryptoNight-Lite
+* CryptoNight-Heavy
+* Original CryptoNight or CryptoNight-Heavy
+* CryptoNight variant 1 also known as Monero7 and CryptoNightV7
+* Modified CryptoNight-Heavy (TUBE only)
+* Modified CryptoNight variant 1 (Stellite only)
+* Modified CryptoNight variant 1 (Masari only)
+* Modified CryptoNight-Heavy (Haven Protocol only)
+* Modified CryptoNight variant 0 (Alloy only)
+* Modified CryptoNight variant 1 (Arto only)
+* CryptoNight variant 2
+
 #### Table of contents
 * [Features](#features)
 * [Download](#download)
