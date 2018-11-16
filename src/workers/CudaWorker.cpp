@@ -110,8 +110,7 @@ void CudaWorker::start()
         if (m_id != m_thread->nvmlId()) {
             //NvmlApi::bind(
             DId = NvmlApi::get_deviceid_by_pci( m_thread, m_threadList);
-            LOG_INFO("get_deviceid_by_pci DeviceId %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", DId,  m_thread->pciDeviceID(), m_thread->pciBusID(), m_thread->pciDomainID());
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            LOG_DEBUG("get_deviceid_by_pci DeviceId %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", DId,  m_thread->pciDeviceID(), m_thread->pciBusID(), m_thread->pciDomainID());            
         }
 
         NvmlUtils::DoCooling(DId, &cool, m_thread, m_threadList);
