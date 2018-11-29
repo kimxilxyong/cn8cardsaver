@@ -110,20 +110,21 @@ void Workers::printHashrate(bool detail)
         char num2[8] = { 0 };
         char num3[8] = { 0 };
 
-        Log::i()->text("%s| THREAD | GPU | 10s H/s | 60s H/s | 15m H/s | NAME", isColors ? "\x1B[1;37m" : "");
+        Log::i()->text( WHITE_BOLD("| THREAD | GPU |  FAN | 10s H/s | 60s H/s | 15m H/s |     PCI    | NAME "));
 
         size_t i = 0;
         for (const xmrig::IThread *t : m_controller->config()->threads()) {
             auto thread = static_cast<const CudaThread *>(t);
-             Log::i()->text("| %6zu | %3zu | %7s | %7s | %7s | %s%s",
-                            i, thread->index(),
+             Log::i()->text("| %6zu | %3zu | %3.1i% | %7s | %7s | %7s | " YELLOW("%04x:%02x:%02x") " | " WHITE_BOLD("%s "),
+                            i, thread->cardId(), thread->fanLevel(),
                             Hashrate::format(m_hashrate->calc(i, Hashrate::ShortInterval), num1, sizeof num1),
                             Hashrate::format(m_hashrate->calc(i, Hashrate::MediumInterval), num2, sizeof num2),
                             Hashrate::format(m_hashrate->calc(i, Hashrate::LargeInterval), num3, sizeof num3),
-                            isColors ? "\x1B[1;30m" : "",
+                            //isColors ? "\x1B[1;30m" : "",                            
+                            thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID(),
                             thread->name()
                             );
-
+            //LOG_INFO(YELLOW("%04x:%02x:%02x"), thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID());
              i++;
         }
     }
@@ -148,6 +149,7 @@ void Workers::printHealth()
     for (const xmrig::IThread *t : m_controller->config()->threads()) {
         auto thread = static_cast<const CudaThread *>(t);
         if (!NvmlApi::health(thread->nvmlId(), health)) {
+        //if (!NvmlApi::health(thread->cardId(), health)) {
             continue;
         }
 
@@ -158,10 +160,13 @@ void Workers::printHealth()
         if (health.clock && health.clock) {
             if (m_controller->config()->isColors()) {
                 LOG_INFO("\x1B[00;35mGPU #%i: " YELLOW("PCI:%04x:%02x:%02x") " Nvml %i \x1B[01m\x1B[00;35m%u/\x1B[01m%u MHz\x1B[00;35m \x1B[01m%uW\x1B[00;35m %s%uC\x1B[00;35m FAN \x1B[01m%u%% Cooling %s Sleep %i",
-                    thread->index(), thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID(), thread->nvmlId(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor() );                     
+                    //thread->index(), thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID(), thread->nvmlId(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor() );                     
+                    thread->cardId(), 
+                    thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID(), 
+                    thread->nvmlId(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor() );                     
             }
             else {
-                LOG_INFO(" * GPU #%i:%i Nvml %i %u/%u MHz %uW %uC FAN %u%% Cooling %s Sleep %i", thread->index(), thread->pciBusID(), thread->nvmlId(), health.clock, health.memClock, health.power / 1000, health.temperature, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor());
+                LOG_INFO(" * GPU #%i:%i Nvml %i %u/%u MHz %uW %uC FAN %u%% Cooling %s Sleep %i", thread->cardId(), thread->pciBusID(), thread->nvmlId(), health.clock, health.memClock, health.power / 1000, health.temperature, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor());
             }
 
             continue;

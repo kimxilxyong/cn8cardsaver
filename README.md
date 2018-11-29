@@ -101,10 +101,14 @@ Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or sha
 ```
 
 ## Donations
-Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via command line option `--donate-level`.
+Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via option `donate-level`.
 
 * XMR: `422KmQPiuCE7GdaAuvGxyYScin46HgBWMQo4qcRpcY88855aeJrNYWd3ZqE4BKwjhA2BJwQY7T2p6CUmvwvabs8vQqZAzLN`
-* BTC: `17WoADQ3bEPZvhMtMrfRvGCcqamYJ6DKju`
+* BTC: `19hNKKFu34CniRWPhGqAB76vi3U4x7DZyZ`
+
+#### Donate to xmrig dev
+* XMR: `48edfHu7V9Z84YzzMa6fUueoELZ9ZRXq9VetWzYGzKt52XU5xvqgzYnDK9URnRoJMk1j8nLwEVsaSWJ4fhdUyZijBGUicoD`
+* BTC: `1P7ujsXeX7GxQwHNnJsRMgAdNkFZmNVqJT`
 
 ## Contacts
 * kimxilxyong@gmail.com

@@ -159,7 +159,7 @@ else()
         src/common/Platform_unix.cpp
         )
 
-    set(EXTRA_LIBS pthread rt dl)
+    set(EXTRA_LIBS pthread rt dl XNVCtrl Xext X11)
 endif()
 
 add_definitions(/D__STDC_FORMAT_MACROS)
