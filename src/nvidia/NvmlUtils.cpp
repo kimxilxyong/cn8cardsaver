@@ -396,7 +396,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 			}
 			//LOG_INFO("Card %u Temperature %i iSleepFactor %i LastTemp %i NeedCooling %i ", deviceIdx, temp, cool->SleepFactor, cool->LastTemp, cool->NeedCooling);
 		}
-		cool->LastTemp = cool->CurrentTemp;
+		
 	}
 	if (cool->NeedsCooling) {
 		int iReduceMining = 10;
@@ -414,21 +414,26 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 		} while ((iReduceMining > 0) && (Workers::sequence() > 0));
 	}
 	else {
-		// Decrease fan speed
-		if (!cool->FanIsAutomatic) {
-			if (cool->CurrentFanLevel > FanAutoDefault) {
-				cool->CurrentFanLevel = cool->CurrentFanLevel - (FanFactor);
-				NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
-			}
-			else {
-				if (cool->CurrentFanLevel < FanAutoDefault) {
-					// Set back to automatic fan control
-					cool->CurrentFanLevel = 0;
-					NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
-				}	
-			}
-		}
+		// Decrease fan speed if temp keeps dropping
+        if (cool->LastTemp > cool->CurrentTemp) {
+            if (!cool->FanIsAutomatic) {
+                if (cool->CurrentFanLevel > FanAutoDefault) {
+                    cool->CurrentFanLevel = cool->CurrentFanLevel - (FanFactor);
+                    NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
+                }
+                else {
+                    if (cool->CurrentFanLevel < FanAutoDefault) {
+                        // Set back to automatic fan control
+                        cool->CurrentFanLevel = 0;
+                        NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
+                    }	
+                }
+            }
+        }
 	}
+    
+    cool->LastTemp = cool->CurrentTemp;
+
 	return true;
 }
 

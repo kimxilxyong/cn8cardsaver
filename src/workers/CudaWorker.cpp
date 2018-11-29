@@ -165,6 +165,7 @@ void CudaWorker::start()
     }
 
     cryptonight_extra_cpu_free(&m_ctx, m_algorithm);
+    NvmlUtils::NVCtrlClose(&cool);
 }
 
 
