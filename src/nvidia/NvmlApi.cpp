@@ -167,7 +167,7 @@ void NvmlApi::bind(const std::vector<xmrig::IThread*> &threads)
         }
     }
 }
-
+/*
 int NvmlApi::get_deviceid_by_pci_old( CudaThread * thread, const std::vector<xmrig::IThread*> &threads)
 {
     if (!isAvailable() || !pNvmlDeviceGetCount || !pNvmlDeviceGetHandleByIndex || !pNvmlDeviceGetPciInfo) {
@@ -220,3 +220,4 @@ int NvmlApi::get_deviceid_by_pci( CudaThread * thread, const std::vector<xmrig::
     }
     return result;
 }
+*/

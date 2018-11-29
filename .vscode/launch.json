@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/cn8cardsaver-nvidia",
             "args": [
-                "--algo=cryptonight-lite" "-o 192.168.0.248:3333" "-u Monero7" "-p w=Monero7" "--variant 1" "--max-gpu-temp=75" "--gpu-temp-falloff=7"
+                //"--algo=cryptonight-lite" "-o 192.168.0.248:3333" "-u Monero7" "-p w=Monero7" "--variant 1" "--max-gpu-temp=75" "--gpu-temp-falloff=7"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

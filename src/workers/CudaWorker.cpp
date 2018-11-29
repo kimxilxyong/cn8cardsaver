@@ -83,11 +83,20 @@ void CudaWorker::start()
 {
     CoolingContext cool;
     cool.SleepFactor = 0;
+    cool.Card = -1;
+
+    
 
     if (cuda_get_deviceinfo(&m_ctx, m_algorithm, false) != 0 || cryptonight_gpu_init(&m_ctx, m_algorithm) != 1) {
         LOG_ERR("Setup failed for GPU %zu. Exitting.", m_id);
         return;
     }
+
+    NvmlUtils::NVCtrlInit(&cool, m_thread);
+    //LOG_INFO("Get_DeviceID_by_PCI");            
+    //LOG_INFO("get_deviceid_by_pci DeviceId %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", cool.Card, m_thread->pciDeviceID(), m_thread->pciBusID(), m_thread->pciDomainID());
+    
+    m_thread->setCardId(cool.Card);
 
     while (Workers::sequence() > 0) {
         if (Workers::isPaused()) {
@@ -103,28 +112,31 @@ void CudaWorker::start()
             consumeJob();
         }
 
-        int DId;
-
-        DId = m_id;
-
-        if (m_id != m_thread->nvmlId()) {
+        
+         //if (m_id != m_thread->nvmlId()) {
+        //if (m_id == 1) {
             //NvmlApi::bind(
-            DId = NvmlApi::get_deviceid_by_pci( m_thread, m_threadList);
-            LOG_DEBUG("get_deviceid_by_pci DeviceId %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", DId,  m_thread->pciDeviceID(), m_thread->pciBusID(), m_thread->pciDomainID());
-        }
+            //NvmlUtils::NVCtrlInit(&cool, m_thread);
+            //LOG_INFO("Get_DeviceID_by_PCI");            
+            //LOG_INFO("get_deviceid_by_pci DeviceId %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", cool.Card, m_thread->pciDeviceID(), m_thread->pciBusID(), m_thread->pciDomainID());
+        //}
 
-        NvmlUtils::DoCooling(DId, &cool, m_thread, m_threadList);
+        NvmlUtils::DoCooling(&cool);
         m_thread->setNeedsCooling(cool.NeedsCooling);
         m_thread->setSleepFactor( cool.SleepFactor);
+        m_thread->setFanLevel(cool.CurrentFanLevel);
+        //LOG_DEBUG("m_thread->setFanLevel(cool.CurrentFanLevel); %i", m_thread->fanLevel());
 
 
         cryptonight_extra_cpu_set_data(&m_ctx, m_blob, m_job.size());
 
         while (!Workers::isOutdated(m_sequence)) {
 
-            NvmlUtils::DoCooling(DId, &cool, m_thread, m_threadList);
+            NvmlUtils::DoCooling(&cool);
             m_thread->setNeedsCooling(cool.NeedsCooling);
-            m_thread->setSleepFactor( cool.SleepFactor);
+            m_thread->setSleepFactor(cool.SleepFactor);
+            m_thread->setFanLevel(cool.CurrentFanLevel);
+            //LOG_DEBUG("m_thread->setFanLevel(cool.CurrentFanLevel); %i", m_thread->fanLevel());
 
             uint32_t foundNonce[10];
             uint32_t foundCount;
@@ -135,10 +147,10 @@ void CudaWorker::start()
 
             for (size_t i = 0; i < foundCount; i++) {
                 *m_job.nonce() = foundNonce[i];
-                m_job.setTemp(cool.Temp);
+                m_job.setTemp(cool.CurrentTemp);
 				m_job.setNeedscooling(cool.NeedsCooling);
 				m_job.setSleepFactor(cool.SleepFactor);
-				m_job.setCard(DId);
+				m_job.setCard(cool.Card);
                 Workers::submit(m_job);
             }
 

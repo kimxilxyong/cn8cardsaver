@@ -43,8 +43,8 @@ public:
     static void release();
 
     static bool health(int id, Health &health);
-    static int get_deviceid_by_pci( CudaThread * thread, const std::vector<xmrig::IThread*> &threads);
-    static int get_deviceid_by_pci_old( CudaThread * thread, const std::vector<xmrig::IThread*> &threads);
+    //static int get_deviceid_by_pci( CudaThread * thread, const std::vector<xmrig::IThread*> &threads);
+    //static int get_deviceid_by_pci_old( CudaThread * thread, const std::vector<xmrig::IThread*> &threads);
     static const char *version();
     static void bind(const std::vector<xmrig::IThread*> &threads);
 

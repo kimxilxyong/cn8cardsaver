@@ -27,7 +27,7 @@
 #define APP_ID        "cn8cardsaver"
 #define APP_NAME      "cn8cardsaver-nvidia"
 #define APP_DESC      "Cryptonight CUDA miner with GPU temperature control"
-#define APP_VERSION   "1.0.4"
+#define APP_VERSION   "1.0.5"
 #define APP_DOMAIN    "cn8cardsaver.com"
 #define APP_SITE      "www.cn8cardsaver.com"
 #define APP_COPYRIGHT "Copyright (C) 2018 cn8cardsaver.com"
@@ -35,7 +35,7 @@
 
 #define APP_VER_MAJOR  1
 #define APP_VER_MINOR  0
-#define APP_VER_PATCH  4
+#define APP_VER_PATCH  5
 
 #ifdef _MSC_VER
 #   if (_MSC_VER >= 1910)
