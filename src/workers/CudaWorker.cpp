@@ -84,6 +84,8 @@ void CudaWorker::start()
     CoolingContext cool;
     cool.SleepFactor = 0;
     cool.Card = -1;
+	cool.NeedsCooling = false;
+	cool.LastTemp = 0;
 
     
 
@@ -136,6 +138,7 @@ void CudaWorker::start()
             m_thread->setNeedsCooling(cool.NeedsCooling);
             m_thread->setSleepFactor(cool.SleepFactor);
             m_thread->setFanLevel(cool.CurrentFanLevel);
+			m_thread->setTemp(cool.CurrentTemp);
             //LOG_DEBUG("m_thread->setFanLevel(cool.CurrentFanLevel); %i", m_thread->fanLevel());
 
             uint32_t foundNonce[10];

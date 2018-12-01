@@ -54,6 +54,7 @@ public:
     inline int nvmlId() const             { return m_nvmlId; }
     inline int cardId() const             { return m_cardId; }
     inline int fanLevel() const           { return m_fanLevel; }
+	inline int temp() const				  { return m_temp; }
     inline int smx() const                { return m_smx; }
     inline int threads() const            { return m_threads; }
     inline size_t threadId() const        { return m_threadId; }
@@ -79,6 +80,7 @@ public:
     inline void setIndex(size_t index)         { m_index = index; }
     inline void setNvmlId(int id)              { m_nvmlId = id; }
     inline void setCardId(int id)              { m_cardId = id; }
+	inline void setTemp(int temp)			   { m_temp = temp; }
     inline void setThreadId(size_t threadId)   { m_threadId = threadId; }
     inline void setThreads(int threads)        { m_threads = threads; }
     inline void setSyncMode(uint32_t syncMode) { m_syncMode = syncMode > 3 ? 3 : syncMode; }
@@ -110,6 +112,7 @@ private:
     int m_nvmlId;
     int m_cardId;
     int m_fanLevel;
+	int m_temp;
     int m_smx;
     int m_threads;
     int64_t m_affinity;

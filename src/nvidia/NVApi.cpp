@@ -77,8 +77,8 @@ bool NVApiInit()
 		hmod = LoadLibraryA("nvapi64.dll");
 	if (hmod == NULL)
 	{
-		//LOG_ERR("Couldn't find nvapi.dll");
-		return 1;
+		LOG_ERR("Couldn't find nvapi64.dll");
+		return false;
 	}
 
 	// nvapi.dll internal function pointers
@@ -107,7 +107,7 @@ bool NVApiInit()
 		NvAPI_EnumPhysicalGPUs == NULL || NvAPI_GPU_GetUsages == NULL ||
 		NvAPI_GPU_GetCoolersSettings == NULL || NvAPI_GPU_SetCoolerLevel == NULL)
 	{
-		LOG_ERR("Couldn't get functions in nvapi.dll");
+		LOG_ERR("Couldn't get functions in nvapi64.dll");
 		return false;
 	}
 
@@ -121,8 +121,14 @@ bool NVApiInit()
 	// gpuUsages[0] must be this value, otherwise NvAPI_GPU_GetUsages won't work
 	gpuUsages[0] = (NVAPI_MAX_USAGES_PER_GPU * 4) | 0x10000;
 
-	(*NvAPI_EnumPhysicalGPUs)(gpuHandles, &gpuCount);
+	int ret = (*NvAPI_EnumPhysicalGPUs)(gpuHandles, &gpuCount);
+	if (ret != NVAPI_OK)
+	{
+		LOG_ERR("Failed NvAPI_EnumPhysicalGPUs GPU Count %i", gpuCount);
+		return false;
+	}
 
+	return true;
 
 	// Set fan level /////
 	int percent = 89;
@@ -131,7 +137,7 @@ bool NVApiInit()
 	coolerLvl.version = NV_GPU_COOLER_LEVELS_VER;
 	coolerLvl.cooler[0].level = percent;
 
-	int ret = (*NvAPI_GPU_SetCoolerLevel)(gpuHandles[0], 0, &coolerLvl);
+	ret = (*NvAPI_GPU_SetCoolerLevel)(gpuHandles[0], 0, &coolerLvl);
 	if (ret == NVAPI_OK)
 	{
 		int level = coolerLvl.cooler[0].level;
@@ -171,8 +177,13 @@ bool NVAPI_SetFanPercent(NvPhysicalGpuHandle handle, int percent)
 {
 	// Set fan level /////
 	NV_GPU_COOLER_LEVELS coolerLvl;
-	coolerLvl.cooler[0].policy = 1;
 	coolerLvl.version = NV_GPU_COOLER_LEVELS_VER;
+	if (percent == 0) {
+		coolerLvl.cooler[0].policy = NV_GPU_COOLER_POLICY_AUTO;  // 16;
+	}
+	else {
+		coolerLvl.cooler[0].policy = NV_GPU_COOLER_POLICY_MANUAL;// 1;
+	}
 	coolerLvl.cooler[0].level = percent;
 
 	int ret = (*NvAPI_GPU_SetCoolerLevel)((int *)handle, 0, &coolerLvl);
@@ -182,10 +193,13 @@ bool NVAPI_SetFanPercent(NvPhysicalGpuHandle handle, int percent)
 		LOG_ERR("Failed NvAPI_GPU_SetCoolerLevel level %i", level);
 		return false;
 	}
+	else {
+		LOG_INFO("NVAPI_SetFanPercent level %i policy %i", coolerLvl.cooler[0].level, coolerLvl.cooler[0].policy);
+	}
 	return true;
 }
 
-bool NVAPI_GetFanPercent(NvPhysicalGpuHandle handle, int *percent)
+bool NVAPI_GetFanPercent(NvPhysicalGpuHandle handle, int *percent, int *policy)
 {
 	// Get Fan level /////
 	NV_GPU_COOLER_SETTINGS coolerSettings;
@@ -199,8 +213,15 @@ bool NVAPI_GetFanPercent(NvPhysicalGpuHandle handle, int *percent)
 	else {
 		if (percent != NULL) {
 			*percent = coolerSettings.cooler[0].currentLevel;
+			//LOG_INFO("NvAPI_GPU_GetCoolersSettings count %i level %i target %i policy %i", coolerSettings.count, coolerSettings.cooler[0].currentLevel, coolerSettings.cooler[0].target, coolerSettings.cooler[0].currentPolicy);
+
+			if (policy != NULL) {
+				*policy = coolerSettings.cooler[0].currentPolicy;
+			}
+				
 			return true;
 		}
+		
 	}
 	return false;
 

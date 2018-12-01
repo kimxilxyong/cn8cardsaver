@@ -110,13 +110,13 @@ void Workers::printHashrate(bool detail)
         char num2[8] = { 0 };
         char num3[8] = { 0 };
 
-        Log::i()->text( WHITE_BOLD("| THREAD | GPU |  FAN | 10s H/s | 60s H/s | 15m H/s |     PCI    | NAME "));
+        Log::i()->text( WHITE_BOLD("| THREAD | GPU |  FAN | TEMP | 10s H/s | 60s H/s | 15m H/s |     PCI    | NAME "));
 
         size_t i = 0;
         for (const xmrig::IThread *t : m_controller->config()->threads()) {
             auto thread = static_cast<const CudaThread *>(t);
-             Log::i()->text("| %6zu | %3zu | %3.1i% | %7s | %7s | %7s | " YELLOW("%04x:%02x:%02x") " | " WHITE_BOLD("%s "),
-                            i, thread->cardId(), thread->fanLevel(),
+             Log::i()->text("| %6zu | %3zu | %3.1i%% | %3.1iC | %7s | %7s | %7s | " YELLOW("%04x:%02x:%02x") " | " WHITE_BOLD("%s "),
+                            i, thread->cardId(), thread->fanLevel(), thread->temp(),
                             Hashrate::format(m_hashrate->calc(i, Hashrate::ShortInterval), num1, sizeof num1),
                             Hashrate::format(m_hashrate->calc(i, Hashrate::MediumInterval), num2, sizeof num2),
                             Hashrate::format(m_hashrate->calc(i, Hashrate::LargeInterval), num3, sizeof num3),

@@ -168,8 +168,6 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
 	NvAPI_Status ret = NVAPI_OK;
 
 	NVApiInit();
-	
-	//NvDisplayHandle hDisplay_a[NVAPI_MAX_PHYSICAL_GPUS * 2] = { 0 };
 
 	ret = NvAPI_Initialize();
 	if (!ret == NVAPI_OK) {
@@ -181,14 +179,14 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
 
 	NvAPI_ShortString ver;
 	NvAPI_GetInterfaceVersionString(ver);
-	LOG_INFO("NVAPI Version: %s\n", ver);
+	LOG_INFO("NVAPI Version: %s", ver);
 
 	NvU32 cnt = NVAPI_MAX_PHYSICAL_GPUS;
 	ret = NvAPI_EnumPhysicalGPUs(NvmlUtils::physHandle, &cnt);
 	if (!ret == NVAPI_OK) {
 		NvAPI_ShortString string;
 		NvAPI_GetErrorMessage(ret, string);
-		LOG_ERR("Failed NVAPI NvAPI_EnumPhysicalGPUs: %s\n", string);
+		LOG_ERR("Failed NVAPI NvAPI_EnumPhysicalGPUs: %", string);
 		return false;
 	}
 
@@ -201,7 +199,7 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
 		if (ret == NVAPI_OK) {
 
 			if (thread->pciBusID() == BusID) {
-				LOG_INFO("BusID %i CardID %i", BusID, i);
+				LOG_INFO("PCIBusID %x CardID %i", BusID, i);
 				cool->Card = i;
 				found = true;
 				break;
@@ -404,7 +402,19 @@ bool NvmlUtils::SetFanPercentLinux(CoolingContext *cool, int percent)
 
 bool NvmlUtils::SetFanPercentWindows(CoolingContext *cool, int percent)
 {
+#ifdef __linux__
+	return false;
+#else
+	/*
+	if (percent == 0) {
+		cool->FanIsAutomatic = true;
+	}
+	else {
+		cool->FanIsAutomatic = false;
+	}
+	*/
 	return NVAPI_SetFanPercent(physHandle[cool->Card], percent);
+#endif
 }
 
 bool NvmlUtils::GetFanPercent(CoolingContext *cool, int *percent)
@@ -447,13 +457,22 @@ bool NvmlUtils::GetFanPercentLinux(CoolingContext *cool, int *percent)
 bool NvmlUtils::GetFanPercentWindows(CoolingContext *cool, int *percent)
 {
 	int level = 0;
+	int policy = 0;
 
-	bool r = NVAPI_GetFanPercent(physHandle[cool->Card], &level);
+	bool r = NVAPI_GetFanPercent(physHandle[cool->Card], &level, &policy);
 	if (r) {
 		cool->CurrentFanLevel = level;
 		if (percent != NULL) {
 			*percent = level;
 		}
+		if (policy == NV_GPU_COOLER_POLICY_AUTO) {
+			cool->FanIsAutomatic = true;
+		}
+		else {
+			//coolerLvl.cooler[0].policy = NV_GPU_COOLER_POLICY_MANUAL;// 1;
+			cool->FanIsAutomatic = false;
+		}
+		//LOG_INFO("CurrentFanLevel %i Card %i", cool->CurrentFanLevel, cool->Card);
 	}
 	return r;
 	/*
@@ -542,9 +561,11 @@ bool NvmlUtils::Temperature(CoolingContext *cool)
 		LOG_ERR("Failed NVAPI NvAPI_GPU_GetThermalSettings: %s\n", string);
 		return false;
 	}
-
+	//for (int i = 0; i < thermal.count; i++) {
+	//	LOG_INFO("NvAPI_GPU_GetThermalSettings Card %i Sensor %i Temp %i", cool->Card, i, thermal.sensor[i].currentTemp);
+	//}
 	cool->CurrentTemp = thermal.sensor[0].currentTemp;
-	//LOG_INFO("Temp: %i C Card %i", cool->CurrentTemp, cool->Card);
+	//LOG_INFO("NvAPI_GPU_GetThermalSettings Temp: %i C Card %i Target %i", cool->CurrentTemp, cool->Card, thermal.sensor[0].target);
 
 	return true;
 #endif
@@ -556,6 +577,12 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
     const float IncreaseSleepFactor = 1.5;
 	const int FanFactor = 5;
     const int FanAutoDefault = 50;
+	const int TickDiff = GetTickCount() - cool->LastTick;
+
+	if (TickDiff < 1000) {
+		return true;
+	}
+	cool->LastTick = GetTickCount();
 
 	//LOG_INFO("AdlUtils::Temperature(context, DeviceID, deviceIdx) %i", deviceIdx);
 	
@@ -575,12 +602,12 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 	if (cool->NeedsCooling) {
 		if (cool->CurrentTemp < Workers::maxtemp() - Workers::falloff()) {
 			LOG_INFO( YELLOW("Card %u Temperature %i is below %i, increase mining, Sleeptime was %u"), cool->Card, cool->CurrentTemp, Workers::maxtemp() - Workers::falloff(), cool->SleepFactor);
-			cool->LastTemp = cool->CurrentTemp;
+			//cool->LastTemp = cool->CurrentTemp;
             if (cool->SleepFactor <= StartSleepFactor) {
 			    cool->NeedsCooling = false;
             }
 			//cool->SleepFactor = StartSleepFactor;
-            cool->SleepFactor = cool->SleepFactor / IncreaseSleepFactor;
+            cool->SleepFactor = (int)((float)cool->SleepFactor / IncreaseSleepFactor);
 
 			// Decrease fan speed
 			if (cool->CurrentFanLevel > 0)
@@ -588,7 +615,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 			NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
 		}
 		if (cool->LastTemp < cool->CurrentTemp) {
-			cool->SleepFactor = cool->SleepFactor * IncreaseSleepFactor;
+			cool->SleepFactor = (int)((float)cool->SleepFactor * IncreaseSleepFactor);
 			if (cool->SleepFactor > 10000) {
 				cool->SleepFactor = 10000;
 			}
