@@ -46,8 +46,15 @@ public:
 	static bool GetFanPercentLinux(CoolingContext *cool, int *percent);
 	static bool GetFanPercentWindows(CoolingContext *cool, int *percent);
 
+#ifdef __linux__
+    static int GetTickCount(void);
+#endif	
+
 private:
+#ifndef __linux__
 	static NvPhysicalGpuHandle physHandle[NVAPI_MAX_PHYSICAL_GPUS];
+#endif
+
 };
 
 

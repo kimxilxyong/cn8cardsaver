@@ -144,8 +144,9 @@ if (WIN32)
         res/app.rc
         src/App_win.cpp
         src/common/Platform_win.cpp
+        src/nvidia/NVApi.cpp
         )
-
+    set(HEADERS "${HEADERS}" src/nvidia/NVApi.h)
     add_definitions(/DWIN32)
     set(EXTRA_LIBS ws2_32 psapi iphlpapi userenv ../src/3rdparty/nvapi/amd64/nvapi64)
 elseif (APPLE)

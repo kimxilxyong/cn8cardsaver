@@ -95,6 +95,7 @@ void CudaWorker::start()
     }
 
     NvmlUtils::NVCtrlInit(&cool, m_thread);
+
     //LOG_INFO("Get_DeviceID_by_PCI");            
     //LOG_INFO("get_deviceid_by_pci DeviceId %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", cool.Card, m_thread->pciDeviceID(), m_thread->pciBusID(), m_thread->pciDomainID());
     
@@ -127,6 +128,7 @@ void CudaWorker::start()
         m_thread->setNeedsCooling(cool.NeedsCooling);
         m_thread->setSleepFactor( cool.SleepFactor);
         m_thread->setFanLevel(cool.CurrentFanLevel);
+        m_thread->setTemp(cool.CurrentTemp);
         //LOG_DEBUG("m_thread->setFanLevel(cool.CurrentFanLevel); %i", m_thread->fanLevel());
 
 

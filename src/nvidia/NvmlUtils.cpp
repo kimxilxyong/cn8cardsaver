@@ -32,18 +32,21 @@
 #include <NVCtrl/NVCtrl.h>
 #include <NVCtrl/NVCtrlLib.h>
 #else
+#include "nvidia/NVApi.h"
 #endif
 
 #include "nvidia/NvmlUtils.h"
 #include "nvidia/NvmlApi.h"
-#include "nvidia/NVApi.h"
+
 #include "nvidia/Health.h"
 
 #include "common/log/Log.h"
 #include "workers/Workers.h"
 #include "workers/CudaThread.h"
 
+#ifndef __linux__
 NvPhysicalGpuHandle NvmlUtils::physHandle[NVAPI_MAX_PHYSICAL_GPUS];
+#endif
 
 #ifdef __linux__
 bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
@@ -102,7 +105,10 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
 
     cool->ScreenCount = ScreenCount(cool->dpy);
 
-    cool->Card = NvmlUtils::Get_DeviceID_by_PCI(cool, thread);
+    if (!NvmlUtils::Get_DeviceID_by_PCI(cool, thread)) {
+		LOG_ERR("Failed to find Card ID for PCI " YELLOW("%04x:%02x:%02x"), thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID());
+		return false;
+	}
 
     //qint32 Nvidia::getFanLevel(const qint32 gpu) const
 
@@ -456,6 +462,9 @@ bool NvmlUtils::GetFanPercentLinux(CoolingContext *cool, int *percent)
 
 bool NvmlUtils::GetFanPercentWindows(CoolingContext *cool, int *percent)
 {
+#ifdef __linux__
+	return false;
+#else	
 	int level = 0;
 	int policy = 0;
 
@@ -475,6 +484,7 @@ bool NvmlUtils::GetFanPercentWindows(CoolingContext *cool, int *percent)
 		//LOG_INFO("CurrentFanLevel %i Card %i", cool->CurrentFanLevel, cool->Card);
 	}
 	return r;
+#endif	
 	/*
 	NvAPI_Status ret = NVAPI_OK;
 	NvU32 fanTacho;
@@ -571,10 +581,20 @@ bool NvmlUtils::Temperature(CoolingContext *cool)
 #endif
 }
 
+#ifdef __linux__
+int NvmlUtils::GetTickCount(void) 
+{
+  struct timespec now;
+  if (clock_gettime(CLOCK_MONOTONIC, &now))
+    return 0;
+  return now.tv_sec * 1000.0 + now.tv_nsec / 1000000.0;
+}
+#endif
+
 bool NvmlUtils::DoCooling(CoolingContext *cool)
 {
 	const int StartSleepFactor = 500;
-    const float IncreaseSleepFactor = 1.5;
+    const float IncreaseSleepFactor = 1.5f;
 	const int FanFactor = 5;
     const int FanAutoDefault = 50;
 	const int TickDiff = GetTickCount() - cool->LastTick;
@@ -587,10 +607,14 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 	//LOG_INFO("AdlUtils::Temperature(context, DeviceID, deviceIdx) %i", deviceIdx);
 	
 	if (Temperature(cool) == false) {
+		LOG_ERR("Failed to get Temperature for card %i", cool->Card);
 		return false;
 	}
     
-	NvmlUtils::GetFanPercent(cool, NULL);
+	if (!NvmlUtils::GetFanPercent(cool, NULL)) {
+		LOG_ERR("Failed to get Fan speed for card %i", cool->Card);
+		return false;
+	}
 
 	if (cool->CurrentTemp > Workers::maxtemp()) {
 		if (!cool->NeedsCooling) {
@@ -600,10 +624,11 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 		cool->NeedsCooling = true;
 	}
 	if (cool->NeedsCooling) {
-		if (cool->CurrentTemp < Workers::maxtemp() - Workers::falloff()) {
+		if (cool->CurrentTemp < (Workers::maxtemp() - Workers::falloff())) {
 			LOG_INFO( YELLOW("Card %u Temperature %i is below %i, increase mining, Sleeptime was %u"), cool->Card, cool->CurrentTemp, Workers::maxtemp() - Workers::falloff(), cool->SleepFactor);
-			//cool->LastTemp = cool->CurrentTemp;
+			cool->LastTemp = cool->CurrentTemp;
             if (cool->SleepFactor <= StartSleepFactor) {
+				cool->SleepFactor = 0;
 			    cool->NeedsCooling = false;
             }
 			//cool->SleepFactor = StartSleepFactor;
@@ -613,13 +638,17 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 			if (cool->CurrentFanLevel > 0)
 				cool->CurrentFanLevel = cool->CurrentFanLevel - FanFactor;
 			SetFanPercent(cool, cool->CurrentFanLevel);
+
+			LOG_INFO( YELLOW("Card %u Sleeptime is now %u"), cool->Card, cool->SleepFactor);
 		}
-		if (cool->LastTemp < cool->CurrentTemp) {
-			cool->SleepFactor = (int)((float)cool->SleepFactor * IncreaseSleepFactor);
-			if (cool->SleepFactor > 10000) {
-				cool->SleepFactor = 10000;
+		else {
+			if (cool->LastTemp < cool->CurrentTemp) {
+				cool->SleepFactor = (int)((float)cool->SleepFactor * IncreaseSleepFactor);
+				if (cool->SleepFactor > 10000) {
+					cool->SleepFactor = 10000;
+				}
+				LOG_INFO("Card %u Temperature %i SleepFactor %i LastTemp %i NeedCooling %i ", cool->Card, cool->CurrentTemp, cool->SleepFactor, cool->LastTemp, cool->NeedsCooling);
 			}
-			//LOG_INFO("Card %u Temperature %i iSleepFactor %i LastTemp %i NeedCooling %i ", deviceIdx, temp, cool->SleepFactor, cool->LastTemp, cool->NeedCooling);
 		}
 		
 	}
@@ -656,7 +685,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
             }
         }
 	}
-    
+    //LOG_INFO( YELLOW("Card %u Sleeptime on exit %u"), cool->Card, cool->SleepFactor);
     cool->LastTemp = cool->CurrentTemp;
 
 	return true;
