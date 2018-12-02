@@ -194,7 +194,7 @@ bool NVAPI_SetFanPercent(NvPhysicalGpuHandle handle, int percent)
 		return false;
 	}
 	else {
-		LOG_INFO("NVAPI_SetFanPercent level %i policy %i", coolerLvl.cooler[0].level, coolerLvl.cooler[0].policy);
+		//LOG_INFO("NVAPI_SetFanPercent level %i policy %i", coolerLvl.cooler[0].level, coolerLvl.cooler[0].policy);
 	}
 	return true;
 }
