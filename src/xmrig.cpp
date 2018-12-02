@@ -21,15 +21,30 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <uv.h>
 #include "App.h"
+#include "common/log/Log.h"
 
+#define STDIN   0
+#define STDOUT  1
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
+    int result;
     App app(argc, argv);
 
-#if defined(_WIN64) || defined(_WIN32)
-    _exit( app.exec() );
+#if defined(__linux__)
+    result = app.exec();
+    printf("Exiting with code %i\n", result);
+    uv_tty_reset_mode();
+    fflush(NULL);
+    sleep(5);
+    raise(SIGKILL);
+    return result;
 #else
-    return( app.exec() );
+    _exit(app.exec());
 #endif
 }

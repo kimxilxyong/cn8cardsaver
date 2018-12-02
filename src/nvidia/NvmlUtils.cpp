@@ -361,7 +361,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 
 	//LOG_INFO("AdlUtils::Temperature(context, DeviceID, deviceIdx) %i", deviceIdx);
 	
-	if (NvmlUtils::Temperature(cool) == false) {
+	if (Temperature(cool) == false) {
 		return false;
 	}
     
@@ -377,7 +377,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 	if (cool->NeedsCooling) {
 		if (cool->CurrentTemp < Workers::maxtemp() - Workers::falloff()) {
 			LOG_INFO( YELLOW("Card %u Temperature %i is below %i, increase mining, Sleeptime was %u"), cool->Card, cool->CurrentTemp, Workers::maxtemp() - Workers::falloff(), cool->SleepFactor);
-			cool->LastTemp = cool->CurrentTemp;
+			//cool->LastTemp = cool->CurrentTemp;
             if (cool->SleepFactor <= StartSleepFactor) {
 			    cool->NeedsCooling = false;
             }
@@ -387,7 +387,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 			// Decrease fan speed
 			if (cool->CurrentFanLevel > 0)
 				cool->CurrentFanLevel = cool->CurrentFanLevel - FanFactor;
-			NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
+			SetFanPercent(cool, cool->CurrentFanLevel);
 		}
 		if (cool->LastTemp < cool->CurrentTemp) {
 			cool->SleepFactor = cool->SleepFactor * IncreaseSleepFactor;
@@ -404,7 +404,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 		// Increase fan speed
 		if (cool->CurrentFanLevel < 100)
 			cool->CurrentFanLevel = cool->CurrentFanLevel + (FanFactor*3);
-		NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
+		SetFanPercent(cool, cool->CurrentFanLevel);
 
 		//LOG_INFO("Card %u Temperature %i iReduceMining %i iSleepFactor %i LastTemp %i NeedCooling %i ", deviceIdx, temp, iReduceMining, cool->SleepFactor, cool->LastTemp, cool->NeedCooling);
 
@@ -419,13 +419,13 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
             if (!cool->FanIsAutomatic) {
                 if (cool->CurrentFanLevel > FanAutoDefault) {
                     cool->CurrentFanLevel = cool->CurrentFanLevel - (FanFactor);
-                    NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
+                    SetFanPercent(cool, cool->CurrentFanLevel);
                 }
                 else {
                     if (cool->CurrentFanLevel < FanAutoDefault) {
                         // Set back to automatic fan control
                         cool->CurrentFanLevel = 0;
-                        NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
+                        SetFanPercent(cool, cool->CurrentFanLevel);
                     }	
                 }
             }
