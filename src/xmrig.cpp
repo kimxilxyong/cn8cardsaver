@@ -22,7 +22,9 @@
  */
 
 #include <stdio.h>
+#if defined(__linux__)
 #include <unistd.h>
+#endif
 #include <stdlib.h>
 #include <uv.h>
 #include "App.h"

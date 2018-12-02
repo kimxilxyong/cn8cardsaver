@@ -6,6 +6,7 @@ NVApi defines
 #define __NVAPI_H__
 
 #include "common/log/Log.h"
+#include "3rdparty/nvapi/nvapi.h"
 
 #define NV_GPU_COOLER_POLICY_MANUAL 1
 #define NV_GPU_COOLER_POLICY_AUTO   16

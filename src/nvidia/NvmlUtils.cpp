@@ -307,8 +307,8 @@ bool NvmlUtils::Get_DeviceID_by_PCI(CoolingContext *cool, CudaThread * thread)
 		ret = NvAPI_GPU_GetBusId(physHandle[i], &BusID);
 		if (ret == NVAPI_OK) {
 
-			if (thread->pciBusID() == BusID) {
-				LOG_INFO("BusID %i CardID %i", BusID, i);
+			if (thread->pciBusID() == BusID) {				
+				LOG_INFO("FOUND GPU %i - PCI " YELLOW("%04x:%02x:%02x"), i, thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID());
 				cool->Card = i;
 				found = true;
 				break;
