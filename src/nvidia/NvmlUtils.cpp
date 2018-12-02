@@ -602,8 +602,9 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 	if (cool->NeedsCooling) {
 		if (cool->CurrentTemp < Workers::maxtemp() - Workers::falloff()) {
 			LOG_INFO( YELLOW("Card %u Temperature %i is below %i, increase mining, Sleeptime was %u"), cool->Card, cool->CurrentTemp, Workers::maxtemp() - Workers::falloff(), cool->SleepFactor);
-			//cool->LastTemp = cool->CurrentTemp;
+			cool->LastTemp = cool->CurrentTemp;
             if (cool->SleepFactor <= StartSleepFactor) {
+				cool->SleepFactor = 0;
 			    cool->NeedsCooling = false;
             }
 			//cool->SleepFactor = StartSleepFactor;
