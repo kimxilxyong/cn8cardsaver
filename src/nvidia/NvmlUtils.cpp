@@ -25,22 +25,27 @@
 #include <uv.h>
 #include <cmath>
 #include <thread>
-#include <unistd.h>
 
-//#include <CL/cl_ext.h>
+#ifdef __linux__
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <NVCtrl/NVCtrl.h>
 #include <NVCtrl/NVCtrlLib.h>
+#else
+#endif
 
 #include "nvidia/NvmlUtils.h"
 #include "nvidia/NvmlApi.h"
+#include "nvidia/NVApi.h"
 #include "nvidia/Health.h"
 
 #include "common/log/Log.h"
 #include "workers/Workers.h"
 #include "workers/CudaThread.h"
 
+NvPhysicalGpuHandle NvmlUtils::physHandle[NVAPI_MAX_PHYSICAL_GPUS];
 
+#ifdef __linux__
 bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
 {
  
@@ -157,6 +162,93 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
     cool->IsFanControlEnabled = r;
     return r;
 }
+#else
+bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
+{
+	NvAPI_Status ret = NVAPI_OK;
+
+	NVApiInit();
+
+	ret = NvAPI_Initialize();
+	if (!ret == NVAPI_OK) {
+		NvAPI_ShortString string;
+		NvAPI_GetErrorMessage(ret, string);
+		LOG_ERR("Failed NVAPI NvAPI_Initialize: %s", string);
+		return false;
+	}
+
+	NvAPI_ShortString ver;
+	NvAPI_GetInterfaceVersionString(ver);
+	LOG_INFO("NVAPI Version: %s", ver);
+
+	NvU32 cnt = NVAPI_MAX_PHYSICAL_GPUS;
+	ret = NvAPI_EnumPhysicalGPUs(NvmlUtils::physHandle, &cnt);
+	if (!ret == NVAPI_OK) {
+		NvAPI_ShortString string;
+		NvAPI_GetErrorMessage(ret, string);
+		LOG_ERR("Failed NVAPI NvAPI_EnumPhysicalGPUs: %", string);
+		return false;
+	}
+
+	NvU32 BusID = 0;
+
+	// Get PCI info for each card
+	bool found = false;
+	for (int i = 0; i < 64; i++) {
+		ret = NvAPI_GPU_GetBusId(NvmlUtils::physHandle[i], &BusID);
+		if (ret == NVAPI_OK) {
+
+			if (thread->pciBusID() == BusID) {
+				LOG_INFO("PCIBusID %x CardID %i", BusID, i);
+				cool->Card = i;
+				found = true;
+				break;
+			}
+		}
+	}
+	if (!found) {
+		LOG_ERR("NvAPI_GPU_GetBusId Unable to find Card " YELLOW("%04x:%02x:%02x"), thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID());
+		return false;
+	}
+
+	cool->IsFanControlEnabled = true;
+	return true;
+	/*
+	NvAPI_ShortString name;
+
+	NV_GPU_THERMAL_SETTINGS thermal;
+
+	ret = NvAPI_GPU_GetFullName(phys[0], name);
+	if (!ret == NVAPI_OK) {
+		NvAPI_ShortString string;
+		NvAPI_GetErrorMessage(ret, string);
+		printf("NVAPI NvAPI_GPU_GetFullName: %s\n", string);
+	}
+	ret = NvAPI_GPU_GetFullName(phys[1], name);
+	if (!ret == NVAPI_OK) {
+		NvAPI_ShortString string;
+		NvAPI_GetErrorMessage(ret, string);
+		printf("NVAPI NvAPI_GPU_GetFullName: %s\n", string);
+	}
+
+	printf("Name: %s\n", name);
+	thermal.version = NV_GPU_THERMAL_SETTINGS_VER;
+	ret = NvAPI_GPU_GetThermalSettings(phys[0], 0, &thermal);
+
+	if (!ret == NVAPI_OK) {
+		NvAPI_ShortString string;
+		NvAPI_GetErrorMessage(ret, string);
+		printf("NVAPI NvAPI_GPU_GetThermalSettings: %s\n", string);
+	}
+
+	printf("Temp: %l C\n", thermal.sensor[0].currentTemp);
+	*/
+
+
+	
+	return false;
+}
+#endif
 
 bool  NvmlUtils::NVCtrlClose(CoolingContext *cool)
 {
@@ -170,13 +262,17 @@ bool  NvmlUtils::NVCtrlClose(CoolingContext *cool)
     XCloseDisplay(cool->dpy);
     return true;
 #else	
-	return ADL2_Main_Control_Destroy(context);
+	NvAPI_Status ret = NVAPI_OK;
+	NVApiClose();
+	ret = NvAPI_Unload();
+	return ret == NVAPI_OK ? true : false;
 #endif	
 }
 
-
-int NvmlUtils::Get_DeviceID_by_PCI( CoolingContext *cool, CudaThread * thread)
+#ifdef __linux__
+bool NvmlUtils::Get_DeviceID_by_PCI( CoolingContext *cool, CudaThread * thread)
 {
+	bool found = false;
     int result = -1;
     int nv_ctrl_pci_bus;
     int nv_ctrl_pci_device;
@@ -192,12 +288,36 @@ int NvmlUtils::Get_DeviceID_by_PCI( CoolingContext *cool, CudaThread * thread)
             result = i;
           
             LOG_INFO("FOUND GPU %i threadLocal m_id %i, nvmlId %i index %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", i, thread->index(), thread->nvmlId(), thread->index(), thread->pciDeviceID(), thread->pciBusID(), thread->pciDomainID());
+			cool->Card = i;
+			found = true;
             break;
         }
     }
-    return result;
+    return found;
 }
+#else
+bool NvmlUtils::Get_DeviceID_by_PCI(CoolingContext *cool, CudaThread * thread)
+{
+	NvAPI_Status ret = NVAPI_OK;
+	NvU32 BusID = 0;
+	bool found = false;
+	
+	// Get PCI info for each card
+	for (int i = 0; i < 64; i++) {
+		ret = NvAPI_GPU_GetBusId(physHandle[i], &BusID);
+		if (ret == NVAPI_OK) {
 
+			if (thread->pciBusID() == BusID) {
+				LOG_INFO("BusID %i CardID %i", BusID, i);
+				cool->Card = i;
+				found = true;
+				break;
+			}
+		}
+	}
+	return found;
+}
+#endif
 
 bool NvmlUtils::SetFanPercent(CoolingContext *cool, int percent)
 {
@@ -212,12 +332,13 @@ bool NvmlUtils::SetFanPercent(CoolingContext *cool, int percent)
 #ifdef __linux__
 	return SetFanPercentLinux(cool, percent);
 #else
-	return SetFanPercentWindowsw(cool, percent);
+	return NvmlUtils::SetFanPercentWindows(cool, percent);
 #endif	
 }
 
 bool NvmlUtils::SetFanPercentLinux(CoolingContext *cool, int percent)
 {
+#ifdef __linux__
 	bool result;
 
 	cool->IsFanControlEnabled = true;
@@ -274,11 +395,26 @@ bool NvmlUtils::SetFanPercentLinux(CoolingContext *cool, int percent)
         result = r;
 	}
 	return result;
+#else
+	return false;
+#endif
 }
 
 bool NvmlUtils::SetFanPercentWindows(CoolingContext *cool, int percent)
 {
+#ifdef __linux__
 	return false;
+#else
+	/*
+	if (percent == 0) {
+		cool->FanIsAutomatic = true;
+	}
+	else {
+		cool->FanIsAutomatic = false;
+	}
+	*/
+	return NVAPI_SetFanPercent(physHandle[cool->Card], percent);
+#endif
 }
 
 bool NvmlUtils::GetFanPercent(CoolingContext *cool, int *percent)
@@ -287,15 +423,17 @@ bool NvmlUtils::GetFanPercent(CoolingContext *cool, int *percent)
 	if (!cool->IsFanControlEnabled) {
 		return false;
 	}
-
+	
 #ifdef __linux__
 	return GetFanPercentLinux(cool, percent);
 #else
-	return GetFanPercentWindowsw(cool, percent);
+	return GetFanPercentWindows(cool, percent);
 #endif	
+	LOG_INFO("Card %i Fan %i", cool->Card, *percent);
 }
 bool NvmlUtils::GetFanPercentLinux(CoolingContext *cool, int *percent)
 {
+#ifdef __linux__
     int value = 0;
     const Bool ret = XNVCTRLQueryTargetAttribute(
                 cool->dpy,
@@ -311,10 +449,69 @@ bool NvmlUtils::GetFanPercentLinux(CoolingContext *cool, int *percent)
         }
     }
     return ret;
+#else
+	return false;
+#endif
 }
+
 bool NvmlUtils::GetFanPercentWindows(CoolingContext *cool, int *percent)
 {
-    return false;
+	int level = 0;
+	int policy = 0;
+
+	bool r = NVAPI_GetFanPercent(physHandle[cool->Card], &level, &policy);
+	if (r) {
+		cool->CurrentFanLevel = level;
+		if (percent != NULL) {
+			*percent = level;
+		}
+		if (policy == NV_GPU_COOLER_POLICY_AUTO) {
+			cool->FanIsAutomatic = true;
+		}
+		else {
+			//coolerLvl.cooler[0].policy = NV_GPU_COOLER_POLICY_MANUAL;// 1;
+			cool->FanIsAutomatic = false;
+		}
+		//LOG_INFO("CurrentFanLevel %i Card %i", cool->CurrentFanLevel, cool->Card);
+	}
+	return r;
+	/*
+	NvAPI_Status ret = NVAPI_OK;
+	NvU32 fanTacho;
+
+	ret = NvAPI_GPU_GetTachReading(physHandle[cool->Card], &fanTacho);
+	if (ret == NVAPI_OK) {
+
+		cool->CurrentFanLevel = fanTacho;
+		if (percent != NULL) {
+			*percent = fanTacho;
+		}
+		LOG_INFO("Fan: %i Card %i", cool->CurrentFanLevel, cool->Card);
+		return true;
+	}
+	else {
+		NvAPI_ShortString string;
+		NvAPI_GetErrorMessage(ret, string);
+		LOG_ERR("NVAPI NvAPI_GPU_GetTachReading: %s\n", string);
+		return false;
+	}
+	*/
+	/*
+	NvAPI_Status ret = NVAPI_OK;
+	NV_GPU_THERMAL_SETTINGS thermal;
+
+	thermal.version = NV_GPU_THERMAL_SETTINGS_VER;
+	ret = NvAPI_GPU_GetThermalSettings(physHandle[cool->Card], 0, &thermal);
+	if (!ret == NVAPI_OK) {
+		NvAPI_ShortString string;
+		NvAPI_GetErrorMessage(ret, string);
+		LOG_ERR("Failed NVAPI NvAPI_GPU_GetThermalSettings: %s\n", string);
+		return false;
+	}
+
+	cool->CurrentTemp = thermal.sensor[0].currentTemp;
+	return false;
+	*/
 }
 
 bool NvmlUtils::Temperature(CoolingContext *cool)
@@ -328,7 +525,9 @@ bool NvmlUtils::Temperature(CoolingContext *cool)
         return true;
     }
     return false;
-    */
+   */
+
+#ifdef __linux__
     if (cool->Card < 0) {
         LOG_ERR("Failed to read NV_CTRL_THERMAL_SENSOR_READING for Card %i", cool->Card);
         return false;
@@ -350,6 +549,26 @@ bool NvmlUtils::Temperature(CoolingContext *cool)
     }
 
     return r;
+#else
+	NvAPI_Status ret = NVAPI_OK;
+	NV_GPU_THERMAL_SETTINGS thermal;
+
+	thermal.version = NV_GPU_THERMAL_SETTINGS_VER;
+	ret = NvAPI_GPU_GetThermalSettings(physHandle[cool->Card], 0, &thermal);
+	if (!ret == NVAPI_OK) {
+		NvAPI_ShortString string;
+		NvAPI_GetErrorMessage(ret, string);
+		LOG_ERR("Failed NVAPI NvAPI_GPU_GetThermalSettings: %s\n", string);
+		return false;
+	}
+	//for (int i = 0; i < thermal.count; i++) {
+	//	LOG_INFO("NvAPI_GPU_GetThermalSettings Card %i Sensor %i Temp %i", cool->Card, i, thermal.sensor[i].currentTemp);
+	//}
+	cool->CurrentTemp = thermal.sensor[0].currentTemp;
+	//LOG_INFO("NvAPI_GPU_GetThermalSettings Temp: %i C Card %i Target %i", cool->CurrentTemp, cool->Card, thermal.sensor[0].target);
+
+	return true;
+#endif
 }
 
 bool NvmlUtils::DoCooling(CoolingContext *cool)
@@ -358,6 +577,12 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
     const float IncreaseSleepFactor = 1.5;
 	const int FanFactor = 5;
     const int FanAutoDefault = 50;
+	const int TickDiff = GetTickCount() - cool->LastTick;
+
+	if (TickDiff < 1000) {
+		return true;
+	}
+	cool->LastTick = GetTickCount();
 
 	//LOG_INFO("AdlUtils::Temperature(context, DeviceID, deviceIdx) %i", deviceIdx);
 	
@@ -365,7 +590,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 		return false;
 	}
     
-    GetFanPercentLinux(cool, NULL);
+	NvmlUtils::GetFanPercent(cool, NULL);
 
 	if (cool->CurrentTemp > Workers::maxtemp()) {
 		if (!cool->NeedsCooling) {
@@ -382,7 +607,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 			    cool->NeedsCooling = false;
             }
 			//cool->SleepFactor = StartSleepFactor;
-            cool->SleepFactor = cool->SleepFactor / IncreaseSleepFactor;
+            cool->SleepFactor = (int)((float)cool->SleepFactor / IncreaseSleepFactor);
 
 			// Decrease fan speed
 			if (cool->CurrentFanLevel > 0)
@@ -390,7 +615,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 			SetFanPercent(cool, cool->CurrentFanLevel);
 		}
 		if (cool->LastTemp < cool->CurrentTemp) {
-			cool->SleepFactor = cool->SleepFactor * IncreaseSleepFactor;
+			cool->SleepFactor = (int)((float)cool->SleepFactor * IncreaseSleepFactor);
 			if (cool->SleepFactor > 10000) {
 				cool->SleepFactor = 10000;
 			}

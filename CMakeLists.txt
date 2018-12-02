@@ -147,7 +147,7 @@ if (WIN32)
         )
 
     add_definitions(/DWIN32)
-    set(EXTRA_LIBS ws2_32 psapi iphlpapi userenv)
+    set(EXTRA_LIBS ws2_32 psapi iphlpapi userenv ../src/3rdparty/nvapi/amd64/nvapi64)
 elseif (APPLE)
     set(SOURCES_OS
         src/App_unix.cpp
