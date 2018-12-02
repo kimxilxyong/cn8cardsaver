@@ -1,12 +1,5 @@
-/* XMRig
- * Copyright 2010      Jeff Garzik <jgarzik@pobox.com>
- * Copyright 2012-2014 pooler      <pooler@litecoinpool.org>
- * Copyright 2014      Lucas Jones <https://github.com/lucasjones>
- * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
- * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
- * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2018      SChernykh   <https://github.com/SChernykh>
- * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+/* cn8cardsaver
+ * Copyright 2018-2019 KimIL       <https://github.com/kimxilxyong>, <kimxilxyong@gmail.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -292,8 +285,9 @@ bool NvmlUtils::Get_DeviceID_by_PCI( CoolingContext *cool, CudaThread * thread)
 
         if (nv_ctrl_pci_bus == thread->pciBusID() && nv_ctrl_pci_device == thread->pciDeviceID() && nv_ctrl_pci_domain == thread->pciDomainID()) {
             result = i;
-          
-            LOG_INFO("FOUND GPU %i threadLocal m_id %i, nvmlId %i index %i pciDeviceID %02x pciBusID %02x pciDomainID %02x", i, thread->index(), thread->nvmlId(), thread->index(), thread->pciDeviceID(), thread->pciBusID(), thread->pciDomainID());
+            
+			LOG_INFO("FOUND GPU %i - PCI " YELLOW("%04x:%02x:%02x"), i, thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID());
+
 			cool->Card = i;
 			found = true;
             break;
