@@ -598,7 +598,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 	}
 	cool->LastTick = GetTickCount();
 
-	LOG_INFO("Workers::fanlevel( %i )", Workers::fanlevel());
+	//LOG_INFO("Workers::fanlevel( %i )", Workers::fanlevel());
 	
 	if (Temperature(cool) == false) {
 		LOG_ERR("Failed to get Temperature for card %i", cool->Card);
