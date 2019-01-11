@@ -105,7 +105,7 @@ static void print_commands(xmrig::Config *config)
 static void print_maxtemp(xmrig::Config *config)
 {
     if (config->isColors()) {
-        Log::i()->text(GREEN_BOLD(" * ") WHITE_BOLD("MAX TEMP     ") YELLOW("%zu") WHITE_BOLD("° Celsius,") YELLOW(" %zu") WHITE_BOLD("° Celsius Max Temp falloff, ") YELLOW("%zu") WHITE_BOLD("%% Fan Level"), config->maxtemp(), config->falloff(), config->fanlevel());
+        Log::i()->text(GREEN_BOLD(" * ") WHITE_BOLD("MAX TEMP     ") YELLOW("%zu") WHITE_BOLD("° Celsius,") YELLOW(" %zu") WHITE_BOLD("° Celsius Max Temp falloff, ") YELLOW("%i") WHITE_BOLD("%% Fan Level"), config->maxtemp(), config->falloff(), config->fanlevel());
         }
     else {
         Log::i()->text(" * MAX TEMP     %zu° Celsius, %zu° Max Temp falloff, %zu%% Fan Level", config->maxtemp(), config->falloff(), config->fanlevel());
