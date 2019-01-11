@@ -75,6 +75,7 @@ Options:\n\
       --donate-level=N      donate level, default 5%% (5 minutes in 100 minutes)\n\
       --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)\n\
       --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)\n\
+      --gpu-fan-level=N     -1 Level Control OFF | 0 Automatic (Default) | 1..100 Specify fixed level\n\
       --user-agent          set custom user-agent string for pool\n\
   -B, --background          run the miner in the background\n\
   -c, --config=FILE         load a JSON-format configuration file\n\
@@ -123,6 +124,7 @@ static struct option const options[] = {
     { "donate-level",      1, nullptr, xmrig::IConfig::DonateLevelKey    },
     { "max-gpu-temp",      1, nullptr, xmrig::IConfig::MaxTempKey        },
     { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::FalloffKey        },
+    { "gpu-fan-level",     1, nullptr, xmrig::IConfig::FanlevelKey       },
     { "dry-run",           0, nullptr, xmrig::IConfig::DryRunKey         },
     { "help",              0, nullptr, xmrig::IConfig::HelpKey           },
     { "keepalive",         0, nullptr, xmrig::IConfig::KeepAliveKey      },
@@ -154,6 +156,7 @@ static struct option const config_options[] = {
     { "donate-level",      1, nullptr, xmrig::IConfig::DonateLevelKey    },
     { "max-gpu-temp",      1, nullptr, xmrig::IConfig::MaxTempKey        },
     { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::FalloffKey        },    
+    { "gpu-fan-level",     1, nullptr, xmrig::IConfig::FanlevelKey       },
     { "dry-run",           0, nullptr, xmrig::IConfig::DryRunKey         },
     { "log-file",          1, nullptr, xmrig::IConfig::LogFileKey        },
     { "print-time",        1, nullptr, xmrig::IConfig::PrintTimeKey      },

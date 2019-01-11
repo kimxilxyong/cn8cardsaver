@@ -283,6 +283,7 @@ void ApiRouter::getMiner(rapidjson::Document &doc) const
     doc.AddMember("donate_level", m_controller->config()->donateLevel(), allocator);
     doc.AddMember("max-gpu-temp", m_controller->config()->maxtemp(), allocator);
     doc.AddMember("gpu-temp-falloff", m_controller->config()->falloff(), allocator);    
+    doc.AddMember("gpu-fan-level", m_controller->config()->fanlevel(), allocator);    
 }
 
 

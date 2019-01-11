@@ -83,6 +83,7 @@ xmrig::CommonConfig::CommonConfig() :
     m_donateLevel(kDefaultDonateLevel),
     m_maxtemp(75),
     m_falloff(10),
+    m_fanlevel(0),
     m_printTime(60),
     m_retries(5),
     m_retryPause(5),
@@ -421,7 +422,8 @@ bool xmrig::CommonConfig::parseString(int key, const char *arg)
 
     case DonateLevelKey: /* --donate-level */
     case MaxTempKey:
-    case FalloffKey:    
+    case FalloffKey:
+    case FanlevelKey:    
 #       ifdef XMRIG_PROXY_PROJECT
         if (strncmp(arg, "minemonero.pro", 14) == 0) {
             m_donateLevel = 0;
@@ -490,6 +492,12 @@ bool xmrig::CommonConfig::parseInt(int key, int arg)
             m_falloff = arg;
         }
         break;
+
+    case FanlevelKey:
+        if (arg >= -1 && arg <= 100) {
+            m_fanlevel = arg;
+        }
+        break;        
 
     case ApiPort: /* --api-port */
         if (arg > 0 && arg <= 65536) {

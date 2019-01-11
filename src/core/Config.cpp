@@ -96,6 +96,7 @@ void xmrig::Config::getJSON(rapidjson::Document &doc) const
     doc.AddMember("donate-level",     donateLevel(), allocator);
     doc.AddMember("max-gpu-temp",     maxtemp(), allocator);
     doc.AddMember("gpu-temp-falloff", falloff(), allocator);    
+    doc.AddMember("gpu-fan-level",    fanlevel(), allocator);
     doc.AddMember("log-file",         logFile() ? Value(StringRef(logFile())).Move() : Value(kNullType).Move(), allocator);
 
     Value pools(kArrayType);

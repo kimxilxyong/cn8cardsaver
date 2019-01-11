@@ -129,6 +129,7 @@ int App::exec()
 
     Workers::setMaxtemp(m_controller->config()->maxtemp());
     Workers::setFalloff(m_controller->config()->falloff());
+    Workers::setFanlevel(m_controller->config()->fanlevel());
 
     if (!Workers::start(m_controller)) {
         LOG_ERR("Failed to start threads");

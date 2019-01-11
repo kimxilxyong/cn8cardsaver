@@ -598,13 +598,18 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 	}
 	cool->LastTick = GetTickCount();
 
-	//LOG_INFO("AdlUtils::Temperature(context, DeviceID, deviceIdx) %i", deviceIdx);
+	LOG_INFO("Workers::fanlevel( %i )", Workers::fanlevel());
 	
 	if (Temperature(cool) == false) {
 		LOG_ERR("Failed to get Temperature for card %i", cool->Card);
 		return false;
 	}
     
+	if (Workers::fanlevel() > 0)
+	{
+		SetFanPercent(cool, Workers::fanlevel());
+	}
+
 	if (!NvmlUtils::GetFanPercent(cool, NULL)) {
 		LOG_ERR("Failed to get Fan speed for card %i", cool->Card);
 		return false;
@@ -628,10 +633,13 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 			//cool->SleepFactor = StartSleepFactor;
             cool->SleepFactor = (int)((float)cool->SleepFactor / IncreaseSleepFactor);
 
-			// Decrease fan speed
-			if (cool->CurrentFanLevel > 0)
-				cool->CurrentFanLevel = cool->CurrentFanLevel - FanFactor;
-			SetFanPercent(cool, cool->CurrentFanLevel);
+			if (Workers::fanlevel() == 0)
+			{
+				// Decrease fan speed
+				if (cool->CurrentFanLevel > 0)
+					cool->CurrentFanLevel = cool->CurrentFanLevel - FanFactor;
+				SetFanPercent(cool, cool->CurrentFanLevel);
+			}
 
 			LOG_INFO( YELLOW("Card %u Sleeptime is now %u"), cool->Card, cool->SleepFactor);
 		}
@@ -649,11 +657,13 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 	if (cool->NeedsCooling) {
 		int iReduceMining = 10;
 
-		// Increase fan speed
-		if (cool->CurrentFanLevel < 100)
-			cool->CurrentFanLevel = cool->CurrentFanLevel + (FanFactor*3);
-		SetFanPercent(cool, cool->CurrentFanLevel);
-
+		if (Workers::fanlevel() == 0)
+		{
+			// Increase fan speed
+			if (cool->CurrentFanLevel < 100)
+				cool->CurrentFanLevel = cool->CurrentFanLevel + (FanFactor*3);
+			SetFanPercent(cool, cool->CurrentFanLevel);
+		}
 		//LOG_INFO("Card %u Temperature %i iReduceMining %i iSleepFactor %i LastTemp %i NeedCooling %i ", deviceIdx, temp, iReduceMining, cool->SleepFactor, cool->LastTemp, cool->NeedCooling);
 
 		do {
@@ -662,22 +672,25 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 		} while ((iReduceMining > 0) && (Workers::sequence() > 0));
 	}
 	else {
-		// Decrease fan speed if temp keeps dropping
-        if (cool->LastTemp > cool->CurrentTemp) {
-            if (!cool->FanIsAutomatic) {
-                if (cool->CurrentFanLevel > FanAutoDefault) {
-                    cool->CurrentFanLevel = cool->CurrentFanLevel - (FanFactor);
-                    SetFanPercent(cool, cool->CurrentFanLevel);
-                }
-                else {
-                    if (cool->CurrentFanLevel < FanAutoDefault) {
-                        // Set back to automatic fan control
-                        cool->CurrentFanLevel = 0;
-                        SetFanPercent(cool, cool->CurrentFanLevel);
-                    }	
-                }
-            }
-        }
+		if (Workers::fanlevel() == 0)
+		{
+			// Decrease fan speed if temp keeps dropping
+        	if (cool->LastTemp > cool->CurrentTemp) {
+            	if (!cool->FanIsAutomatic) {
+                	if (cool->CurrentFanLevel > FanAutoDefault) {
+                    	cool->CurrentFanLevel = cool->CurrentFanLevel - (FanFactor);
+                    	SetFanPercent(cool, cool->CurrentFanLevel);
+                	}
+                	else {
+                    	if (cool->CurrentFanLevel < FanAutoDefault) {
+                        	// Set back to automatic fan control
+                        	cool->CurrentFanLevel = 0;
+                        	SetFanPercent(cool, cool->CurrentFanLevel);
+                    	}	
+                	}
+            	}
+        	}
+		}
 	}
     //LOG_INFO( YELLOW("Card %u Sleeptime on exit %u"), cool->Card, cool->SleepFactor);
     cool->LastTemp = cool->CurrentTemp;

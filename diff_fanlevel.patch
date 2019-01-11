@@ -1,0 +1,318 @@
+diff --git a/.vscode/launch.json b/.vscode/launch.json
+index da1a1e8..006fb8a 100644
+--- a/.vscode/launch.json
++++ b/.vscode/launch.json
+@@ -11,7 +11,7 @@
+             "program": "${workspaceFolder}/build/cn8cardsaver-nvidia",
+             "args": [
+                 //"--algo=cryptonight-lite" "-o 192.168.0.248:3333" "-u Monero7" "-p w=Monero7" "--variant 1" "--max-gpu-temp=75" "--gpu-temp-falloff=7"
+-                "--cuda-launch=40x92,16x195", "--donate-level=1", "-o pool.minexmr.com:5555", "-u 422KmQPiuCE7GdaAuvGxyYScin46HgBWMQo4qcRpcY88855aeJrNYWd3ZqE4BKwjhA2BJwQY7T2p6CUmvwvabs8vQqZAzLN", "-p w=Monero8"             
++                "--gpu-fan-level=89", "--cuda-launch=40x92,16x195", "--donate-level=1", "-o pool.monero.hashvault.pro:3333", "-u 422KmQPiuCE7GdaAuvGxyYScin46HgBWMQo4qcRpcY88855aeJrNYWd3ZqE4BKwjhA2BJwQY7T2p6CUmvwvabs8vQqZAzLN", "-p w=Monero8"             
+             ],
+             "stopAtEntry": false,
+             "cwd": "${workspaceFolder}",
+diff --git a/src/App.cpp b/src/App.cpp
+index f3bf216..2cb8b72 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -129,6 +129,7 @@ int App::exec()
+ 
+     Workers::setMaxtemp(m_controller->config()->maxtemp());
+     Workers::setFalloff(m_controller->config()->falloff());
++    Workers::setFanlevel(m_controller->config()->fanlevel());
+ 
+     if (!Workers::start(m_controller)) {
+         LOG_ERR("Failed to start threads");
+diff --git a/src/Summary.cpp b/src/Summary.cpp
+index e996b76..05679ec 100644
+--- a/src/Summary.cpp
++++ b/src/Summary.cpp
+@@ -105,10 +105,10 @@ static void print_commands(xmrig::Config *config)
+ static void print_maxtemp(xmrig::Config *config)
+ {
+     if (config->isColors()) {
+-        Log::i()->text(GREEN_BOLD(" * ") WHITE_BOLD("MAX TEMP     ") YELLOW("%zu") WHITE_BOLD(" Celsius,") YELLOW(" %zu") WHITE_BOLD(" Celsius Max Temp falloff"), config->maxtemp(), config->falloff());
++        Log::i()->text(GREEN_BOLD(" * ") WHITE_BOLD("MAX TEMP     ") YELLOW("%zu") WHITE_BOLD("° Celsius,") YELLOW(" %zu") WHITE_BOLD("° Celsius Max Temp falloff, ") YELLOW("%zu") WHITE_BOLD("%% Fan Level"), config->maxtemp(), config->falloff(), config->fanlevel());
+         }
+     else {
+-        Log::i()->text(" * MAX TEMP     %zu Celsius %zu Max Temp falloff", config->maxtemp(), config->falloff());
++        Log::i()->text(" * MAX TEMP     %zu° Celsius, %zu° Max Temp falloff, %zu%% Fan Level", config->maxtemp(), config->falloff(), config->fanlevel());
+     }
+ }
+ 
+diff --git a/src/api/ApiRouter.cpp b/src/api/ApiRouter.cpp
+index b77a2a9..dff2939 100644
+--- a/src/api/ApiRouter.cpp
++++ b/src/api/ApiRouter.cpp
+@@ -283,6 +283,7 @@ void ApiRouter::getMiner(rapidjson::Document &doc) const
+     doc.AddMember("donate_level", m_controller->config()->donateLevel(), allocator);
+     doc.AddMember("max-gpu-temp", m_controller->config()->maxtemp(), allocator);
+     doc.AddMember("gpu-temp-falloff", m_controller->config()->falloff(), allocator);    
++    doc.AddMember("gpu-fan-level", m_controller->config()->fanlevel(), allocator);    
+ }
+ 
+ 
+diff --git a/src/common/config/CommonConfig.cpp b/src/common/config/CommonConfig.cpp
+index 0349a0e..6df1321 100644
+--- a/src/common/config/CommonConfig.cpp
++++ b/src/common/config/CommonConfig.cpp
+@@ -83,6 +83,7 @@ xmrig::CommonConfig::CommonConfig() :
+     m_donateLevel(kDefaultDonateLevel),
+     m_maxtemp(75),
+     m_falloff(10),
++    m_fanlevel(0),
+     m_printTime(60),
+     m_retries(5),
+     m_retryPause(5),
+@@ -421,7 +422,8 @@ bool xmrig::CommonConfig::parseString(int key, const char *arg)
+ 
+     case DonateLevelKey: /* --donate-level */
+     case MaxTempKey:
+-    case FalloffKey:    
++    case FalloffKey:
++    case FanlevelKey:    
+ #       ifdef XMRIG_PROXY_PROJECT
+         if (strncmp(arg, "minemonero.pro", 14) == 0) {
+             m_donateLevel = 0;
+@@ -491,6 +493,12 @@ bool xmrig::CommonConfig::parseInt(int key, int arg)
+         }
+         break;
+ 
++    case FanlevelKey:
++        if (arg >= -1 && arg <= 100) {
++            m_fanlevel = arg;
++        }
++        break;        
++
+     case ApiPort: /* --api-port */
+         if (arg > 0 && arg <= 65536) {
+             m_apiPort = arg;
+diff --git a/src/common/config/CommonConfig.h b/src/common/config/CommonConfig.h
+index a949004..4ee1d02 100644
+--- a/src/common/config/CommonConfig.h
++++ b/src/common/config/CommonConfig.h
+@@ -64,6 +64,7 @@ public:
+ 
+     inline int maxtemp() const                     { return m_maxtemp; }
+     inline int falloff() const                     { return m_falloff; }
++    inline int fanlevel() const                    { return m_fanlevel; }
+ 
+     inline bool isWatch() const override               { return m_watch && !m_fileName.isNull(); }
+     inline const Algorithm &algorithm() const override { return m_algorithm; }
+@@ -102,6 +103,7 @@ protected:
+     int m_donateLevel;
+     int m_maxtemp;
+     int m_falloff;    
++    int m_fanlevel;
+     int m_printTime;
+     int m_retries;
+     int m_retryPause;
+diff --git a/src/common/interfaces/IConfig.h b/src/common/interfaces/IConfig.h
+index 6f78f0f..a2bab61 100644
+--- a/src/common/interfaces/IConfig.h
++++ b/src/common/interfaces/IConfig.h
+@@ -69,6 +69,7 @@ public:
+ 
+         MaxTempKey        = 1260,
+         FalloffKey        = 1261,
++        FanlevelKey       = 1262,
+ 
+         // xmrig common
+         CPUPriorityKey    = 1021,
+diff --git a/src/core/Config.cpp b/src/core/Config.cpp
+index c3cca53..06c4e4f 100644
+--- a/src/core/Config.cpp
++++ b/src/core/Config.cpp
+@@ -96,6 +96,7 @@ void xmrig::Config::getJSON(rapidjson::Document &doc) const
+     doc.AddMember("donate-level",     donateLevel(), allocator);
+     doc.AddMember("max-gpu-temp",     maxtemp(), allocator);
+     doc.AddMember("gpu-temp-falloff", falloff(), allocator);    
++    doc.AddMember("gpu-fan-level",    fanlevel(), allocator);
+     doc.AddMember("log-file",         logFile() ? Value(StringRef(logFile())).Move() : Value(kNullType).Move(), allocator);
+ 
+     Value pools(kArrayType);
+diff --git a/src/core/ConfigLoader_platform.h b/src/core/ConfigLoader_platform.h
+index 8891318..94e5078 100644
+--- a/src/core/ConfigLoader_platform.h
++++ b/src/core/ConfigLoader_platform.h
+@@ -75,6 +75,7 @@ Options:\n\
+       --donate-level=N      donate level, default 5%% (5 minutes in 100 minutes)\n\
+       --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)\n\
+       --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)\n\
++      --gpu-fan-level=N     -1 Level Control OFF | 0 Automatic (Default) | 1..100 Specify fixed level\n\
+       --user-agent          set custom user-agent string for pool\n\
+   -B, --background          run the miner in the background\n\
+   -c, --config=FILE         load a JSON-format configuration file\n\
+@@ -123,6 +124,7 @@ static struct option const options[] = {
+     { "donate-level",      1, nullptr, xmrig::IConfig::DonateLevelKey    },
+     { "max-gpu-temp",      1, nullptr, xmrig::IConfig::MaxTempKey        },
+     { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::FalloffKey        },
++    { "gpu-fan-level",     1, nullptr, xmrig::IConfig::FanlevelKey       },
+     { "dry-run",           0, nullptr, xmrig::IConfig::DryRunKey         },
+     { "help",              0, nullptr, xmrig::IConfig::HelpKey           },
+     { "keepalive",         0, nullptr, xmrig::IConfig::KeepAliveKey      },
+@@ -154,6 +156,7 @@ static struct option const config_options[] = {
+     { "donate-level",      1, nullptr, xmrig::IConfig::DonateLevelKey    },
+     { "max-gpu-temp",      1, nullptr, xmrig::IConfig::MaxTempKey        },
+     { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::FalloffKey        },    
++    { "gpu-fan-level",     1, nullptr, xmrig::IConfig::FanlevelKey       },
+     { "dry-run",           0, nullptr, xmrig::IConfig::DryRunKey         },
+     { "log-file",          1, nullptr, xmrig::IConfig::LogFileKey        },
+     { "print-time",        1, nullptr, xmrig::IConfig::PrintTimeKey      },
+diff --git a/src/nvidia/NvmlUtils.cpp b/src/nvidia/NvmlUtils.cpp
+index 5b182ec..2927747 100644
+--- a/src/nvidia/NvmlUtils.cpp
++++ b/src/nvidia/NvmlUtils.cpp
+@@ -598,13 +598,18 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
+ 	}
+ 	cool->LastTick = GetTickCount();
+ 
+-	//LOG_INFO("AdlUtils::Temperature(context, DeviceID, deviceIdx) %i", deviceIdx);
++	LOG_INFO("Workers::fanlevel( %i )", Workers::fanlevel());
+ 	
+ 	if (Temperature(cool) == false) {
+ 		LOG_ERR("Failed to get Temperature for card %i", cool->Card);
+ 		return false;
+ 	}
+     
++	if (Workers::fanlevel() > 0)
++	{
++		SetFanPercent(cool, Workers::fanlevel());
++	}
++
+ 	if (!NvmlUtils::GetFanPercent(cool, NULL)) {
+ 		LOG_ERR("Failed to get Fan speed for card %i", cool->Card);
+ 		return false;
+@@ -628,10 +633,13 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
+ 			//cool->SleepFactor = StartSleepFactor;
+             cool->SleepFactor = (int)((float)cool->SleepFactor / IncreaseSleepFactor);
+ 
+-			// Decrease fan speed
+-			if (cool->CurrentFanLevel > 0)
+-				cool->CurrentFanLevel = cool->CurrentFanLevel - FanFactor;
+-			SetFanPercent(cool, cool->CurrentFanLevel);
++			if (Workers::fanlevel() == 0)
++			{
++				// Decrease fan speed
++				if (cool->CurrentFanLevel > 0)
++					cool->CurrentFanLevel = cool->CurrentFanLevel - FanFactor;
++				SetFanPercent(cool, cool->CurrentFanLevel);
++			}
+ 
+ 			LOG_INFO( YELLOW("Card %u Sleeptime is now %u"), cool->Card, cool->SleepFactor);
+ 		}
+@@ -649,11 +657,13 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
+ 	if (cool->NeedsCooling) {
+ 		int iReduceMining = 10;
+ 
+-		// Increase fan speed
+-		if (cool->CurrentFanLevel < 100)
+-			cool->CurrentFanLevel = cool->CurrentFanLevel + (FanFactor*3);
+-		SetFanPercent(cool, cool->CurrentFanLevel);
+-
++		if (Workers::fanlevel() == 0)
++		{
++			// Increase fan speed
++			if (cool->CurrentFanLevel < 100)
++				cool->CurrentFanLevel = cool->CurrentFanLevel + (FanFactor*3);
++			SetFanPercent(cool, cool->CurrentFanLevel);
++		}
+ 		//LOG_INFO("Card %u Temperature %i iReduceMining %i iSleepFactor %i LastTemp %i NeedCooling %i ", deviceIdx, temp, iReduceMining, cool->SleepFactor, cool->LastTemp, cool->NeedCooling);
+ 
+ 		do {
+@@ -662,22 +672,25 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
+ 		} while ((iReduceMining > 0) && (Workers::sequence() > 0));
+ 	}
+ 	else {
+-		// Decrease fan speed if temp keeps dropping
+-        if (cool->LastTemp > cool->CurrentTemp) {
+-            if (!cool->FanIsAutomatic) {
+-                if (cool->CurrentFanLevel > FanAutoDefault) {
+-                    cool->CurrentFanLevel = cool->CurrentFanLevel - (FanFactor);
+-                    SetFanPercent(cool, cool->CurrentFanLevel);
+-                }
+-                else {
+-                    if (cool->CurrentFanLevel < FanAutoDefault) {
+-                        // Set back to automatic fan control
+-                        cool->CurrentFanLevel = 0;
+-                        SetFanPercent(cool, cool->CurrentFanLevel);
+-                    }	
+-                }
+-            }
+-        }
++		if (Workers::fanlevel() == 0)
++		{
++			// Decrease fan speed if temp keeps dropping
++        	if (cool->LastTemp > cool->CurrentTemp) {
++            	if (!cool->FanIsAutomatic) {
++                	if (cool->CurrentFanLevel > FanAutoDefault) {
++                    	cool->CurrentFanLevel = cool->CurrentFanLevel - (FanFactor);
++                    	SetFanPercent(cool, cool->CurrentFanLevel);
++                	}
++                	else {
++                    	if (cool->CurrentFanLevel < FanAutoDefault) {
++                        	// Set back to automatic fan control
++                        	cool->CurrentFanLevel = 0;
++                        	SetFanPercent(cool, cool->CurrentFanLevel);
++                    	}	
++                	}
++            	}
++        	}
++		}
+ 	}
+     //LOG_INFO( YELLOW("Card %u Sleeptime on exit %u"), cool->Card, cool->SleepFactor);
+     cool->LastTemp = cool->CurrentTemp;
+diff --git a/src/workers/Workers.cpp b/src/workers/Workers.cpp
+index 9d65ae1..f904493 100644
+--- a/src/workers/Workers.cpp
++++ b/src/workers/Workers.cpp
+@@ -45,6 +45,7 @@ bool Workers::m_active = false;
+ bool Workers::m_enabled = true;
+ int Workers::m_maxtemp = 75;
+ int Workers::m_falloff = 10;
++int Workers::m_fanlevel = 0;
+ Hashrate *Workers::m_hashrate = nullptr;
+ IJobResultListener *Workers::m_listener = nullptr;
+ Job Workers::m_job;
+@@ -211,6 +212,12 @@ void Workers::setFalloff(int falloff)
+     m_falloff = falloff;
+ }
+ 
++void Workers::setFanlevel(int fanlevel)
++{
++    m_fanlevel = fanlevel;
++}
++
++
+ void Workers::setJob(const Job &job, bool donate)
+ {
+     uv_rwlock_wrlock(&m_rwlock);
+diff --git a/src/workers/Workers.h b/src/workers/Workers.h
+index 5fb6956..9d78664 100644
+--- a/src/workers/Workers.h
++++ b/src/workers/Workers.h
+@@ -62,6 +62,8 @@ public:
+ 
+     static void setMaxtemp(int maxtemp);
+     static void setFalloff(int falloff);
++    static void setFanlevel(int fanlevel);
++    
+ 
+     static inline bool isEnabled()                               { return m_enabled; }
+     static inline bool isOutdated(uint64_t sequence)             { return m_sequence.load(std::memory_order_relaxed) != sequence; }
+@@ -73,6 +75,7 @@ public:
+ 
+ 	static inline int maxtemp() { return m_maxtemp; }
+ 	static inline int falloff() { return m_falloff; }
++    static inline int fanlevel() { return m_fanlevel; }
+ 
+ #   ifndef XMRIG_NO_API
+     static void threadsSummary(rapidjson::Document &doc);
+@@ -105,6 +108,7 @@ private:
+ 
+     static int m_maxtemp;
+     static int m_falloff;
++    static int m_fanlevel;
+     static int m_workercount;
+ };
+ 

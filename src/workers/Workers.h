@@ -62,6 +62,8 @@ public:
 
     static void setMaxtemp(int maxtemp);
     static void setFalloff(int falloff);
+    static void setFanlevel(int fanlevel);
+    
 
     static inline bool isEnabled()                               { return m_enabled; }
     static inline bool isOutdated(uint64_t sequence)             { return m_sequence.load(std::memory_order_relaxed) != sequence; }
@@ -73,6 +75,7 @@ public:
 
 	static inline int maxtemp() { return m_maxtemp; }
 	static inline int falloff() { return m_falloff; }
+    static inline int fanlevel() { return m_fanlevel; }
 
 #   ifndef XMRIG_NO_API
     static void threadsSummary(rapidjson::Document &doc);
@@ -105,6 +108,7 @@ private:
 
     static int m_maxtemp;
     static int m_falloff;
+    static int m_fanlevel;
     static int m_workercount;
 };
 

@@ -64,6 +64,7 @@ public:
 
     inline int maxtemp() const                     { return m_maxtemp; }
     inline int falloff() const                     { return m_falloff; }
+    inline int fanlevel() const                    { return m_fanlevel; }
 
     inline bool isWatch() const override               { return m_watch && !m_fileName.isNull(); }
     inline const Algorithm &algorithm() const override { return m_algorithm; }
@@ -102,6 +103,7 @@ protected:
     int m_donateLevel;
     int m_maxtemp;
     int m_falloff;    
+    int m_fanlevel;
     int m_printTime;
     int m_retries;
     int m_retryPause;

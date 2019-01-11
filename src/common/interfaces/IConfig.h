@@ -69,6 +69,7 @@ public:
 
         MaxTempKey        = 1260,
         FalloffKey        = 1261,
+        FanlevelKey       = 1262,
 
         // xmrig common
         CPUPriorityKey    = 1021,

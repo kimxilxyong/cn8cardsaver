@@ -45,6 +45,7 @@ bool Workers::m_active = false;
 bool Workers::m_enabled = true;
 int Workers::m_maxtemp = 75;
 int Workers::m_falloff = 10;
+int Workers::m_fanlevel = 0;
 Hashrate *Workers::m_hashrate = nullptr;
 IJobResultListener *Workers::m_listener = nullptr;
 Job Workers::m_job;
@@ -210,6 +211,12 @@ void Workers::setFalloff(int falloff)
 {
     m_falloff = falloff;
 }
+
+void Workers::setFanlevel(int fanlevel)
+{
+    m_fanlevel = fanlevel;
+}
+
 
 void Workers::setJob(const Job &job, bool donate)
 {
