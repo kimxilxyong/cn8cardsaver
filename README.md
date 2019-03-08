@@ -13,6 +13,7 @@ Temperature control:
 ```
       --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
       --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
+      --gpu-fan-level=N     -1 disabled | 0 automatic (default) | 1..100 Fan speed in percent
 ```
 
 #### Supported algorithms
@@ -80,6 +81,7 @@ Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or sha
       --cuda-affinity=N     affine GPU threads to a CPU
       --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
       --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
+      --gpu-fan-level=N     -1 disabled| 0 automatic (default) | 1..100 Fan speed in percent|
       --no-color            disable colored output
       --variant             algorithm PoW variant
       --donate-level=N      donate level, default 5% (5 minutes in 100 minutes)
