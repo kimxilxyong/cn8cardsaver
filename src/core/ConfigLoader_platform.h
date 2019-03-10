@@ -126,11 +126,11 @@ static struct option const options[] = {
     { "gpu-temp-falloff",  1, nullptr, xmrig::IConfig::FalloffKey        },
     { "gpu-fan-level",     1, nullptr, xmrig::IConfig::FanlevelKey       },
     { "dry-run",           0, nullptr, xmrig::IConfig::DryRunKey         },
-    { "help",              0, nullptr, xmrig::IConfig::HelpKey           },
     { "keepalive",         0, nullptr, xmrig::IConfig::KeepAliveKey      },
     { "log-file",          1, nullptr, xmrig::IConfig::LogFileKey        },
     { "nicehash",          0, nullptr, xmrig::IConfig::NicehashKey       },
     { "no-color",          0, nullptr, xmrig::IConfig::ColorKey          },
+    { "no-watch",          0, nullptr, xmrig::IConfig::WatchKey          },
     { "variant",           1, nullptr, xmrig::IConfig::VariantKey        },
     { "pass",              1, nullptr, xmrig::IConfig::PasswordKey       },
     { "print-time",        1, nullptr, xmrig::IConfig::PrintTimeKey      },
@@ -144,7 +144,6 @@ static struct option const options[] = {
     { "rig-id",            1, nullptr, xmrig::IConfig::RigIdKey          },
     { "tls",               0, nullptr, xmrig::IConfig::TlsKey            },
     { "tls-fingerprint",   1, nullptr, xmrig::IConfig::FingerprintKey    },
-    { "version",           0, nullptr, xmrig::IConfig::VersionKey        },
     { nullptr,             0, nullptr, 0                                 }
 };
 
@@ -164,6 +163,7 @@ static struct option const config_options[] = {
     { "retry-pause",       1, nullptr, xmrig::IConfig::RetryPauseKey     },
     { "syslog",            0, nullptr, xmrig::IConfig::SyslogKey         },
     { "user-agent",        1, nullptr, xmrig::IConfig::UserAgentKey      },
+    { "watch",             0, nullptr, xmrig::IConfig::WatchKey          },
     { "bfactor",           1, nullptr, xmrig::IConfig::CudaBFactorKey    }, // deprecated, use --cuda-bfactor instead.
     { "bsleep",            1, nullptr, xmrig::IConfig::CudaBSleepKey     }, // deprecated, use --cuda-bsleep instead.
     { "cuda-bfactor",      1, nullptr, xmrig::IConfig::CudaBFactorKey    },
@@ -172,21 +172,6 @@ static struct option const config_options[] = {
     { "max-gpu-threads",   1, nullptr, xmrig::IConfig::CudaMaxThreadsKey }, // deprecated, use --cuda-max-threads instead.
     { "max-gpu-usage",     1, nullptr, xmrig::IConfig::CudaMaxUsageKey   }, // deprecated.
     { nullptr,             0, nullptr, 0                                 }
-};
-
-
-static struct option const pool_options[] = {
-    { "url",             1, nullptr, xmrig::IConfig::UrlKey         },
-    { "pass",            1, nullptr, xmrig::IConfig::PasswordKey    },
-    { "user",            1, nullptr, xmrig::IConfig::UserKey        },
-    { "userpass",        1, nullptr, xmrig::IConfig::UserpassKey    },
-    { "nicehash",        0, nullptr, xmrig::IConfig::NicehashKey    },
-    { "keepalive",       2, nullptr, xmrig::IConfig::KeepAliveKey   },
-    { "variant",         1, nullptr, xmrig::IConfig::VariantKey     },
-    { "rig-id",          1, nullptr, xmrig::IConfig::RigIdKey       },
-    { "tls",             0, nullptr, xmrig::IConfig::TlsKey         },
-    { "tls-fingerprint", 1, nullptr, xmrig::IConfig::FingerprintKey },
-    { nullptr,           0, nullptr, 0 }
 };
 
 

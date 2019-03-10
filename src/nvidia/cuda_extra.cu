@@ -30,22 +30,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#ifdef __CUDACC__
-__constant__
-#else
-const
-#endif
-uint64_t keccakf_rndc[24] ={
-    0x0000000000000001, 0x0000000000008082, 0x800000000000808a,
-    0x8000000080008000, 0x000000000000808b, 0x0000000080000001,
-    0x8000000080008081, 0x8000000000008009, 0x000000000000008a,
-    0x0000000000000088, 0x0000000080008009, 0x000000008000000a,
-    0x000000008000808b, 0x800000000000008b, 0x8000000000008089,
-    0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
-    0x000000000000800a, 0x800000008000000a, 0x8000000080008081,
-    0x8000000000008080, 0x0000000080000001, 0x8000000080008008
-};
-
 typedef unsigned char BitSequence;
 typedef unsigned long long DataLength;
 
@@ -162,7 +146,7 @@ __global__ void cryptonight_extra_gpu_prepare(
     uint32_t ctx_b[4];
     uint32_t ctx_key1[40];
     uint32_t ctx_key2[40];
-    uint32_t input[21];
+    uint32_t input[32];
 
     memcpy(input, d_input, len);
     uint32_t nonce = startNonce + thread;
@@ -178,15 +162,22 @@ __global__ void cryptonight_extra_gpu_prepare(
     XOR_BLOCKS_DST(ctx_state + 4, ctx_state + 12, ctx_b);
     memcpy(d_ctx_a + thread * 4, ctx_a, 4 * 4);
 
-    if (VARIANT == xmrig::VARIANT_2) {
-        memcpy(d_ctx_b + thread * 12, ctx_b, 4 * 4);
+    if ((VARIANT == xmrig::VARIANT_WOW) || (VARIANT == xmrig::VARIANT_4)) {
+        memcpy(d_ctx_b + thread * 16, ctx_b, 4 * 4);
         // bx1
         XOR_BLOCKS_DST(ctx_state + 16, ctx_state + 20, ctx_b);
-        memcpy(d_ctx_b + thread * 12 + 4, ctx_b, 4 * 4);
+        memcpy(d_ctx_b + thread * 16 + 4, ctx_b, 4 * 4);
+        // r0, r1, r2, r3
+        memcpy(d_ctx_b + thread * 16 + 2 * 4, ctx_state + 24, 4 * 8);
+    } else if (VARIANT == xmrig::VARIANT_2) {
+        memcpy(d_ctx_b + thread * 16, ctx_b, 4 * 4);
+        // bx1
+        XOR_BLOCKS_DST(ctx_state + 16, ctx_state + 20, ctx_b);
+        memcpy(d_ctx_b + thread * 16 + 4, ctx_b, 4 * 4);
         // division_result
-        memcpy(d_ctx_b + thread * 12 + 2 * 4, ctx_state + 24, 4 * 2);
+        memcpy(d_ctx_b + thread * 16 + 2 * 4, ctx_state + 24, 4 * 2);
         // sqrt_result
-        memcpy(d_ctx_b + thread * 12 + 2 * 4 + 2, ctx_state + 26, 4 * 2);
+        memcpy(d_ctx_b + thread * 16 + 2 * 4 + 2, ctx_state + 26, 4 * 2);
     } else {
         memcpy(d_ctx_b + thread * 4, ctx_b, 4 * 4);
     }
@@ -282,6 +273,53 @@ __global__ void cryptonight_extra_gpu_final( int threads, uint64_t target, uint3
 }
 
 
+template<xmrig::Algo ALGO>
+__global__ void cryptonight_gpu_extra_gpu_final( int threads, uint64_t target, uint32_t* __restrict__ d_res_count, uint32_t * __restrict__ d_res_nonce, uint32_t * __restrict__ d_ctx_state,uint32_t * __restrict__ d_ctx_key2 )
+{
+	const int thread = blockDim.x * blockIdx.x + threadIdx.x;
+
+	__shared__ uint32_t sharedMemory[1024];
+
+	cn_aes_gpu_init( sharedMemory );
+	__syncthreads( );
+
+	if ( thread >= threads )
+		return;
+
+	int i;
+	uint32_t * __restrict__ ctx_state = d_ctx_state + thread * 50;
+	uint32_t state[50];
+
+	#pragma unroll
+	for ( i = 0; i < 50; i++ )
+		state[i] = ctx_state[i];
+
+	uint32_t key[40];
+
+	// load keys
+	MEMCPY8( key, d_ctx_key2 + thread * 40, 20 );
+
+	for(int i=0; i < 16; i++)
+	{
+		for(size_t t = 4; t < 12; ++t)
+		{
+			cn_aes_pseudo_round_mut( sharedMemory, state + 4u * t, key );
+		}
+		// scipt first 4 * 128bit blocks = 4 * 4 uint32_t values
+		mix_and_propagate(state + 4 * 4);
+	}
+
+	cn_keccakf2( (uint64_t *) state );
+
+	if ( ((uint64_t*)state)[3] < target )
+	{
+		uint32_t idx = atomicInc( d_res_count, 0xFFFFFFFF );
+
+		if(idx < 10)
+			d_res_nonce[idx] = thread;
+	}
+}
+
 void cryptonight_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len)
 {
     ctx->inputlen = static_cast<unsigned int>(len);
@@ -291,6 +329,9 @@ void cryptonight_extra_cpu_set_data(nvid_ctx *ctx, const void *data, size_t len)
 
 int cryptonight_extra_cpu_init(nvid_ctx *ctx, xmrig::Algo algo, size_t hashMemSize)
 {
+    CU_CHECK(ctx->device_id, cuDeviceGet(&ctx->cuDevice, ctx->device_id));
+    CU_CHECK(ctx->device_id, cuCtxCreate(&ctx->cuContext, 0, ctx->cuDevice));
+
     cudaError_t err;
     err = cudaSetDevice(ctx->device_id);
     if (err != cudaSuccess) {
@@ -328,7 +369,7 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, xmrig::Algo algo, size_t hashMemSi
         CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_state2, 50 * sizeof(uint32_t) * wsize));
     }
     else {
-        ctx_b_size *= 3;
+        ctx_b_size *= 4;
         ctx->d_ctx_state2 = ctx->d_ctx_state;
     }
 
@@ -338,7 +379,7 @@ int cryptonight_extra_cpu_init(nvid_ctx *ctx, xmrig::Algo algo, size_t hashMemSi
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_a,        4  * sizeof(uint32_t) * wsize));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_ctx_b,        ctx_b_size));
     // POW block format http://monero.wikia.com/wiki/PoW_Block_Header_Format
-    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input,        21 * sizeof (uint32_t)));
+    CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_input,        32 * sizeof (uint32_t)));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_count, sizeof (uint32_t)));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_result_nonce, 10 * sizeof (uint32_t)));
     CUDA_CHECK(ctx->device_id, cudaMalloc(&ctx->d_long_state,   hashMemSize * wsize));
@@ -361,7 +402,13 @@ void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, xmrig::Al
     if (algo == xmrig::CRYPTONIGHT_HEAVY) {
         CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_AUTO><<<grid, block >>>(wsize, ctx->d_input, ctx->inputlen, startNonce,
             ctx->d_ctx_state, ctx->d_ctx_state2, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
-    } else if (variant == xmrig::VARIANT_2) {
+    } else if (variant == xmrig::VARIANT_WOW) {
+        CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<xmrig::CRYPTONIGHT, xmrig::VARIANT_WOW> << <grid, block >> > (wsize, ctx->d_input, ctx->inputlen, startNonce,
+            ctx->d_ctx_state, ctx->d_ctx_state2, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
+    } else if (variant == xmrig::VARIANT_4) {
+        CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<xmrig::CRYPTONIGHT, xmrig::VARIANT_4> << <grid, block >> > (wsize, ctx->d_input, ctx->inputlen, startNonce,
+            ctx->d_ctx_state, ctx->d_ctx_state2, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
+    } else if (variant == xmrig::VARIANT_2 || variant == xmrig::VARIANT_HALF || variant == xmrig::VARIANT_TRTL || variant == xmrig::VARIANT_RWZ || variant == xmrig::VARIANT_ZLS || variant == xmrig::VARIANT_DOUBLE) {
         CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_prepare<xmrig::CRYPTONIGHT, xmrig::VARIANT_2><<<grid, block >>>(wsize, ctx->d_input, ctx->inputlen, startNonce,
             ctx->d_ctx_state, ctx->d_ctx_state2, ctx->d_ctx_a, ctx->d_ctx_b, ctx->d_ctx_key1, ctx->d_ctx_key2));
     } else {
@@ -370,7 +417,7 @@ void cryptonight_extra_cpu_prepare(nvid_ctx *ctx, uint32_t startNonce, xmrig::Al
     }
 }
 
-void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, xmrig::Algo algo)
+void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t target, uint32_t *rescount, uint32_t *resnonce, xmrig::Algo algo, xmrig::Variant variant)
 {
     int threadsperblock = 128;
     uint32_t wsize = ctx->device_blocks * ctx->device_threads;
@@ -384,8 +431,13 @@ void cryptonight_extra_cpu_final(nvid_ctx *ctx, uint32_t startNonce, uint64_t ta
     if (algo == xmrig::CRYPTONIGHT_HEAVY) {
         CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_final<xmrig::CRYPTONIGHT_HEAVY><<<grid, block >>>( wsize, target, ctx->d_result_count, ctx->d_result_nonce, ctx->d_ctx_state,ctx->d_ctx_key2 ));
     } else {
-        // fallback for all other algorithms
-        CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_final<xmrig::CRYPTONIGHT><<<grid, block >>>( wsize, target, ctx->d_result_count, ctx->d_result_nonce, ctx->d_ctx_state,ctx->d_ctx_key2 ));
+        if (variant == xmrig::VARIANT_GPU) {
+            // fallback for all other algorithms
+            CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_gpu_extra_gpu_final<xmrig::CRYPTONIGHT> << <grid, block >> > (wsize, target, ctx->d_result_count, ctx->d_result_nonce, ctx->d_ctx_state, ctx->d_ctx_key2));
+        } else {
+            // fallback for all other algorithms
+            CUDA_CHECK_KERNEL(ctx->device_id, cryptonight_extra_gpu_final<xmrig::CRYPTONIGHT> << <grid, block >> > (wsize, target, ctx->d_result_count, ctx->d_result_nonce, ctx->d_ctx_state, ctx->d_ctx_key2));
+        }
     }
 
     CUDA_CHECK(ctx->device_id, cudaMemcpy(rescount, ctx->d_result_count, sizeof(uint32_t), cudaMemcpyDeviceToHost));

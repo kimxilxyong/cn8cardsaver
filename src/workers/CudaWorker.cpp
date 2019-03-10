@@ -46,8 +46,10 @@ CudaWorker::CudaWorker(Handle *handle) :
     m_sequence(0),
     m_blob()
 {
+    const CudaThread *thread = static_cast<CudaThread *>(handle->config());
     m_thread = static_cast<CudaThread *>(handle->config());
-    m_threadList = handle->threadsList();
+    
+    //m_threadList = handle->threadsList();
     
     //setThreadList(handle->threadsList());
     //m_threadsList = handle->threadsList();
@@ -66,15 +68,21 @@ CudaWorker::CudaWorker(Handle *handle) :
     uv_rwlock_rdunlock(&m_rwlock);
     */
 
-    m_ctx.device_id      = static_cast<int>(m_thread->index());
-    m_ctx.device_blocks  = m_thread->blocks();
-    m_ctx.device_threads = m_thread->threads();
-    m_ctx.device_bfactor = m_thread->bfactor();
-    m_ctx.device_bsleep  = m_thread->bsleep();
-    m_ctx.syncMode       = m_thread->syncMode();
 
-    if (m_thread->affinity() >= 0) {
-        Platform::setThreadAffinity(static_cast<uint64_t>(m_thread->affinity()));
+    m_ctx.module = nullptr;
+    m_ctx.kernel = nullptr;
+    m_ctx.kernel_variant = xmrig::VARIANT_AUTO;
+    m_ctx.kernel_height = 0;
+
+    m_ctx.device_id      = static_cast<int>(thread->index());
+    m_ctx.device_blocks  = thread->blocks();
+    m_ctx.device_threads = thread->threads();
+    m_ctx.device_bfactor = thread->bfactor();
+    m_ctx.device_bsleep  = thread->bsleep();
+    m_ctx.syncMode       = thread->syncMode();
+
+    if (thread->affinity() >= 0) {
+        Platform::setThreadAffinity(static_cast<uint64_t>(thread->affinity()));
     }
 }
 
@@ -145,10 +153,10 @@ void CudaWorker::start()
 
             uint32_t foundNonce[10];
             uint32_t foundCount;
-  
+
             cryptonight_extra_cpu_prepare(&m_ctx, m_nonce, m_algorithm, m_job.algorithm().variant());
-            cryptonight_gpu_hash(&m_ctx, m_algorithm, m_job.algorithm().variant(), m_nonce);
-            cryptonight_extra_cpu_final(&m_ctx, m_nonce, m_job.target(), &foundCount, foundNonce, m_algorithm);
+            cryptonight_gpu_hash(&m_ctx, m_algorithm, m_job.algorithm().variant(), m_job.height(), m_nonce);
+            cryptonight_extra_cpu_final(&m_ctx, m_nonce, m_job.target(), &foundCount, foundNonce, m_algorithm, m_job.algorithm().variant());
 
             for (size_t i = 0; i < foundCount; i++) {
                 *m_job.nonce() = foundNonce[i];
@@ -174,7 +182,7 @@ void CudaWorker::start()
 }
 
 
-bool CudaWorker::resume(const Job &job)
+bool CudaWorker::resume(const xmrig::Job &job)
 {
     if (m_job.poolId() == -1 && job.poolId() >= 0 && job.id() == m_pausedJob.id()) {
         m_job   = m_pausedJob;
@@ -188,9 +196,9 @@ bool CudaWorker::resume(const Job &job)
 
 void CudaWorker::consumeJob()
 {
-    Job job = Workers::job();
+    xmrig::Job job = Workers::job();
     m_sequence = Workers::sequence();
-    if (m_job == job) {
+    if (m_job.id() == job.id() && m_job.clientId() == job.clientId()) {
         return;
     }
 
@@ -215,7 +223,7 @@ void CudaWorker::consumeJob()
 }
 
 
-void CudaWorker::save(const Job &job)
+void CudaWorker::save(const xmrig::Job &job)
 {
     if (job.poolId() == -1 && m_job.poolId() >= 0) {
         m_pausedJob   = m_job;
