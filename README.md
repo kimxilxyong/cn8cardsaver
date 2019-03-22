@@ -1,11 +1,11 @@
 # CN8CardSaver for NVIDIA GPUs
 
-[![Github All Releases](https://img.shields.io/github/downloads/kimxilxyong/cn8cardsafer-nvidia/total.svg)](https://github.com/kimxilxyong/cn8cardsafer-nvidia/releases)
+[![Github All Releases](https://img.shields.io/github/downloads/kimxilxyong/cn8cardsaver-nvidia/total.svg)](https://github.com/kimxilxyong/cn8cardsaver-nvidia/releases)
 ![version](https://img.shields.io/badge/version-1.1.0-blue.svg?cacheSeconds=2592000)
 [![GitHub Release Date](https://img.shields.io/github/release-date-pre/kimxilxyong/cn8cardsaver-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsaver-nvidia/releases)
 [![GitHub license](https://img.shields.io/github/license/kimxilxyong/cn8cardsafer-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsafer-nvidia/blob/master/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/kimxilxyong/cn8cardsafer-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsafer-nvidia/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/kimxilxyong/cn8cardsafer-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsafer-nvidia/network)
+[![GitHub stars](https://img.shields.io/github/stars/kimxilxyong/cn8cardsafer-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsaver-nvidia/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/kimxilxyong/cn8cardsafer-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsaver-nvidia/network)
 
 
 CN8CardSaver is a high performance CryptoNight NVIDIA CUDA miner forked from XMRig-nvidia.
