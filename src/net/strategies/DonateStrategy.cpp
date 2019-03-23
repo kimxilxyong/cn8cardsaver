@@ -33,6 +33,7 @@
 #include "common/xmrig.h"
 #include "net/strategies/DonateStrategy.h"
 
+/*
 const static char *kDonatePool1 = "pool.monero.hashvault.pro";
 const static char *kDonatePool2 = "frankfurt-1.xmrpool.net";
 const static char *kMSRDonatePool = "pool.masari.hashvault.pro";
@@ -42,12 +43,57 @@ const static char *XmrKey = "422KmQPiuCE7GdaAuvGxyYScin46HgBWMQo4qcRpcY88855aeJr
 const static char *MsrKey = "5hK7CCFkBG5459LUXjLyXNf4FabrBJLnvdzrqN4vZ3HYCQRUH9AW5T5PUnwq1gnysRFPF96AepFFLLgpioGs1di1RGBQTrE";
 const static char *LokiKey = "LEXQ4XEBTMkijAweU4eHhFbGgNJtbrVVZ97nqZK8cPWVcKHBy6i1b4h9vYWoBJmqXfio58JtqS2zpjWKzp2tUvd1Pfjf5br";
 const static char *WorktipsKey = "WtipsnPFwaeU1N7HhrHw8NArWhLPjrb4FFErfCXuMNKe1xEwetA41AZRGU5YRg6CTK2aTzJvSDXQXA6H1f4iQx3p57cd7JvSdz";
+*/
 
 static inline float randomf(float min, float max) {
     return (max - min) * ((((float) rand()) / (float) RAND_MAX)) + min;
 }
+xmrig::DonateStrategy::DonateStrategy(int level, const char *user, Algo algo, IStrategyListener *listener) :
+    m_active(false),
+    m_donateTime(level * 60 * 1000),
+    m_idleTime((100 - level) * 60 * 1000),
+    m_strategy(nullptr),
+    m_listener(listener),
+    m_now(0),
+    m_stop(0)
+{
+    uint8_t hash[200];
+    char userId[65] = { 0 };
+    char pass[30];
 
+    sprintf(pass, "CN8-NVIDIA %f", randomf(0, 1));
 
+    //Sleep(50000);
+
+    keccak(reinterpret_cast<const uint8_t *>(user), strlen(user), hash);
+    Job::toHex(hash, 32, userId);
+
+#   //ifndef XMRIG_NO_TLS
+    //m_pools.push_back(Pool("donate.ssl.xmrig.com", 443, userId, nullptr, false, true, true));
+#   //endif
+
+    //m_pools.push_back(Pool("pool.monero.hashvault.pro", 3333, userId, "CN8AMDPWD", false, true));
+    m_pools.push_back(Pool("pool.hashvault.pro", 3333, "422KmQPiuCE7GdaAuvGxyYScin46HgBWMQo4qcRpcY88855aeJrNYWd3ZqE4BKwjhA2BJwQY7T2p6CUmvwvabs8vQqZAzLN", pass, false, true));
+    
+
+    for (Pool &pool : m_pools) {
+        pool.adjust(Algorithm(algo, VARIANT_AUTO));
+    }
+
+    if (m_pools.size() > 1) {
+        m_strategy = new FailoverStrategy(m_pools, 1, 2, this, false);
+    }
+    else {
+        m_strategy = new SinglePoolStrategy(m_pools.front(), 1, 2, this, false);
+    }
+
+    m_timer.data = this;
+    uv_timer_init(uv_default_loop(), &m_timer);
+
+    idle(m_idleTime * randomf(0.5, 1.5));
+}
+
+/*
 xmrig::DonateStrategy::DonateStrategy(int level, const char *user, Algo algo, IStrategyListener *listener) :
     m_active(false),
     m_donateTime(level * 60 * 1000),
@@ -100,7 +146,7 @@ xmrig::DonateStrategy::DonateStrategy(int level, const char *user, Algo algo, IS
 
     idle(m_idleTime * randomf(0.5, 1.5));
 }
-
+*/
 
 xmrig::DonateStrategy::~DonateStrategy()
 {
