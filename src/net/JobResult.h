@@ -5,7 +5,9 @@
  * Copyright 2014-2016 Wolf9466    <https://github.com/OhGodAPet>
  * Copyright 2016      Jay D Dee   <jayddee246@gmail.com>
  * Copyright 2017-2018 XMR-Stak    <https://github.com/fireice-uk>, <https://github.com/psychocrypt>
- * Copyright 2016-2018 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
+ * Copyright 2018      Lee Clagett <https://github.com/vtnerd>
+ * Copyright 2018-2019 SChernykh   <https://github.com/SChernykh>
+ * Copyright 2016-2019 XMRig       <https://github.com/xmrig>, <support@xmrig.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -21,8 +23,8 @@
  *   along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __JOBRESULT_H__
-#define __JOBRESULT_H__
+#ifndef XMRIG_JOBRESULT_H
+#define XMRIG_JOBRESULT_H
 
 
 #include <memory.h>
@@ -32,15 +34,19 @@
 #include "common/net/Job.h"
 
 
+namespace xmrig {
+
+
 class JobResult
 {
 public:
     inline JobResult() : poolId(0), diff(0), nonce(0), card(-1) {}
-    inline JobResult(int poolId, const xmrig::Id &jobId, uint32_t nonce, const uint8_t *result, uint32_t diff, const xmrig::Algorithm &algorithm, int temp, bool needscooling, int card) :
+    inline JobResult(int poolId, const Id &jobId, const Id &clientId, uint32_t nonce, const uint8_t *result, uint32_t diff, const Algorithm &algorithm, int temp, bool needscooling, int card) :
         poolId(poolId),
         diff(diff),
         nonce(nonce),
         algorithm(algorithm),
+        clientId(clientId),
         jobId(jobId),
         temp(temp),
         needscooling(needscooling),
@@ -53,6 +59,7 @@ public:
     inline JobResult(const Job &job) : poolId(0), diff(0), nonce(0)
     {
         jobId     = job.id();
+        clientId  = job.clientId();
         poolId    = job.poolId();
         diff      = job.diff();
         nonce     = *job.nonce();
@@ -69,15 +76,20 @@ public:
     }
 
 
+    Algorithm algorithm;
+    Id clientId;
+    Id jobId;
     int poolId;
     uint32_t diff;
     uint32_t nonce;
     uint8_t result[32];
-    xmrig::Algorithm algorithm;
-    xmrig::Id jobId;
     int temp;
     bool needscooling;
     int card;
 };
 
-#endif /* __JOBRESULT_H__ */
+
+} /* namespace xmrig */
+
+
+#endif /* XMRIG_JOBRESULT_H */

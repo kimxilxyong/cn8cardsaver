@@ -19,6 +19,10 @@
 #include <cmath>
 #include <thread>
 
+#include "common/log/Log.h"
+#include "workers/Workers.h"
+#include "workers/CudaThread.h"
+
 #ifdef __linux__
 #include <unistd.h>
 #include <X11/Xlib.h>
@@ -33,9 +37,7 @@
 
 #include "nvidia/Health.h"
 
-#include "common/log/Log.h"
-#include "workers/Workers.h"
-#include "workers/CudaThread.h"
+
 
 #ifndef __linux__
 NvPhysicalGpuHandle NvmlUtils::physHandle[NVAPI_MAX_PHYSICAL_GPUS];

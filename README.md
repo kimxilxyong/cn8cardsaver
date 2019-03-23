@@ -1,10 +1,17 @@
 # CN8CardSaver for NVIDIA GPUs
 
-CN8CardSaver is a high performance Monero (XMR) NVIDIA miner forked from XMRig-nvidia.
+[![Github All Releases](https://img.shields.io/github/downloads/kimxilxyong/cn8cardsaver-nvidia/total.svg)](https://github.com/kimxilxyong/cn8cardsaver-nvidia/releases)
+![version](https://img.shields.io/badge/version-1.1.0-blue.svg?cacheSeconds=2592000)
+[![GitHub Release Date](https://img.shields.io/github/release-date-pre/kimxilxyong/cn8cardsaver-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsaver-nvidia/releases)
+[![GitHub license](https://img.shields.io/github/license/kimxilxyong/cn8cardsaver-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsaver-nvidia/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/kimxilxyong/cn8cardsaver-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsaver-nvidia/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/kimxilxyong/cn8cardsaver-nvidia.svg)](https://github.com/kimxilxyong/cn8cardsaver-nvidia/network)
 
-cn8cardsaver (CryptoNight V1/2) is a miner for Monero XMR with GPU temperature control support. With it you can keep your expensive cards save.
-Keep it below 65 C to be on the safe side. If it gets to 80 C or above you are damaging your card.
-Use the options ```--max-gpu-temp=65 and --gpu-temp-falloff=9```
+
+CN8CardSaver is a high performance CryptoNight NVIDIA CUDA miner forked from XMRig-nvidia.
+
+cn8cardsaver is a miner for CryptoNight coins with GPU temperature and fan control support. With it you can keep your expensive cards save. Keep it below 65 C to be on the safe side. If it gets to 80 C or above you could be damaging your card.
+Use the options ```--max-gpu-temp=65 and --gpu-temp-falloff=9``` for example
 
 GPU mining part based on [psychocrypt](https://github.com/psychocrypt) code used in xmr-stak-nvidia.
 
@@ -13,21 +20,8 @@ Temperature control:
 ```
       --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
       --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
+      --gpu-fan-level=N     -1 disabled | 0 automatic (default) | 1..100 Fan speed in percent
 ```
-
-#### Supported algorithms
-* CryptoNight (Monero)
-* CryptoNight-Lite
-* CryptoNight-Heavy
-* Original CryptoNight or CryptoNight-Heavy
-* CryptoNight variant 1 also known as Monero7 and CryptoNightV7
-* Modified CryptoNight-Heavy (TUBE only)
-* Modified CryptoNight variant 1 (Stellite only)
-* Modified CryptoNight variant 1 (Masari only)
-* Modified CryptoNight-Heavy (Haven Protocol only)
-* Modified CryptoNight variant 0 (Alloy only)
-* Modified CryptoNight variant 1 (Arto only)
-* CryptoNight variant 2
 
 #### Table of contents
 * [Features](#features)
@@ -35,17 +29,20 @@ Temperature control:
 * [Usage](#usage)
 * [Donations](#donations)
 * [Contacts](#contacts)
+* [Build](https://github.com/xmrig/xmrig-amd/wiki/Build)
 
 ## Features
 * High performance.
 * Official Windows support.
 * Support for backup (failover) mining server.
-* CryptoNight-Lite support for AEON.
+* Most CryptoNight coins supported
 * Automatic GPU configuration.
-* GPU health monitoring (clocks, power, temperature, fan speed) 
+* GPU health monitoring (clocks, power, temperature, fan speed)
 * GPU temperature management (option --max-gpu-temp, --gpu-temp-falloff)
+* GPU fan control (option --gpu-fan-level)
 * Nicehash support.
 * It's open source software.
+
 
 ## Download
 * Binary releases: https://github.com/kimxilxyong/cn8cardsaver-nvidia/releases
@@ -80,6 +77,7 @@ Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or sha
       --cuda-affinity=N     affine GPU threads to a CPU
       --max-gpu-temp=N      Maximum temperature a GPU may reach before its cooled down (default 75)
       --gpu-temp-falloff=N  Amount of temperature to cool off before mining starts again (default 10)
+      --gpu-fan-level=N     -1 disabled | 0 automatic (default) | 1..100 Fan speed in percent
       --no-color            disable colored output
       --variant             algorithm PoW variant
       --donate-level=N      donate level, default 5% (5 minutes in 100 minutes)
@@ -100,8 +98,56 @@ Use [config.xmrig.com](https://config.xmrig.com/nvidia) to generate, edit or sha
   -V, --version             output version information and exit
 ```
 
+
+## Supported algorithms / coins
+
+```
+    { "cryptonight",           "cn",           xmrig::CRYPTONIGHT,       xmrig::VARIANT_AUTO   },
+    { "cryptonight/0",         "cn/0",         xmrig::CRYPTONIGHT,       xmrig::VARIANT_0      },
+    { "cryptonight/1",         "cn/1",         xmrig::CRYPTONIGHT,       xmrig::VARIANT_1      },
+    { "cryptonight/xtl",       "cn/xtl",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_XTL    },
+    { "cryptonight/msr",       "cn/msr",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_MSR    },
+    { "cryptonight/xao",       "cn/xao",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_XAO    },
+    { "cryptonight/rto",       "cn/rto",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_RTO    },
+    { "cryptonight/2",         "cn/2",         xmrig::CRYPTONIGHT,       xmrig::VARIANT_2      },
+    { "cryptonight/half",      "cn/half",      xmrig::CRYPTONIGHT,       xmrig::VARIANT_HALF   },
+    { "cryptonight/xtlv9",     "cn/xtlv9",     xmrig::CRYPTONIGHT,       xmrig::VARIANT_HALF   },
+    { "cryptonight/wow",       "cn/wow",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_WOW    },
+    { "cryptonight/r",         "cn/r",         xmrig::CRYPTONIGHT,       xmrig::VARIANT_4      },
+    { "cryptonight/rwz",       "cn/rwz",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_RWZ    },
+    { "cryptonight/zls",       "cn/zls",       xmrig::CRYPTONIGHT,       xmrig::VARIANT_ZLS    },
+    { "cryptonight/double",    "cn/double",    xmrig::CRYPTONIGHT,       xmrig::VARIANT_DOUBLE },
+
+#   ifndef XMRIG_NO_AEON
+    { "cryptonight-lite",      "cn-lite",      xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_AUTO },
+    { "cryptonight-light",     "cn-light",     xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_AUTO },
+    { "cryptonight-lite/0",    "cn-lite/0",    xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_0    },
+    { "cryptonight-lite/1",    "cn-lite/1",    xmrig::CRYPTONIGHT_LITE,  xmrig::VARIANT_1    },
+#   endif
+
+#   ifndef XMRIG_NO_SUMO
+    { "cryptonight-heavy",      "cn-heavy",      xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_AUTO },
+    { "cryptonight-heavy/0",    "cn-heavy/0",    xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_0    },
+    { "cryptonight-heavy/xhv",  "cn-heavy/xhv",  xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_XHV  },
+    { "cryptonight-heavy/tube", "cn-heavy/tube", xmrig::CRYPTONIGHT_HEAVY, xmrig::VARIANT_TUBE },
+#   endif
+
+#   ifndef XMRIG_NO_CN_PICO
+    { "cryptonight-pico/trtl",  "cn-pico/trtl",  xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
+    { "cryptonight-pico",       "cn-pico",       xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
+    { "cryptonight-turtle",     "cn-trtl",       xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
+    { "cryptonight-ultralite",  "cn-ultralite",  xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
+    { "cryptonight_turtle",     "cn_turtle",     xmrig::CRYPTONIGHT_PICO, xmrig::VARIANT_TRTL },
+#   endif
+
+#   ifndef XMRIG_NO_CN_GPU
+    { "cryptonight/gpu",        "cn/gpu",  xmrig::CRYPTONIGHT, xmrig::VARIANT_GPU },
+#   endif
+```
+
+
 ## Donations
-Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via option `donate-level`.
+#### Default donation 5% (5 minutes in 100 minutes) can be reduced to 1% via option `donate-level`.
 
 * XMR: `422KmQPiuCE7GdaAuvGxyYScin46HgBWMQo4qcRpcY88855aeJrNYWd3ZqE4BKwjhA2BJwQY7T2p6CUmvwvabs8vQqZAzLN`
 * BTC: `19hNKKFu34CniRWPhGqAB76vi3U4x7DZyZ`
