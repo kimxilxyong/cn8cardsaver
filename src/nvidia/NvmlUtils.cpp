@@ -589,9 +589,9 @@ int NvmlUtils::GetTickCount(void)
 
 bool NvmlUtils::DoCooling(CoolingContext *cool)
 {
-	const int StartSleepFactor = 500;
+	const int StartSleepFactor = 100;
     const float IncreaseSleepFactor = 1.5f;
-	const int FanFactor = 5;
+	const int FanFactor = 2;
     const int FanAutoDefault = 50;
 	const int TickDiff = GetTickCount() - cool->LastTick;
 
@@ -657,13 +657,13 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 		
 	}
 	if (cool->NeedsCooling) {
-		int iReduceMining = 10;
+		int iReduceMining = 5;
 
 		if (Workers::fanlevel() == 0)
 		{
 			// Increase fan speed
 			if (cool->CurrentFanLevel < 100)
-				cool->CurrentFanLevel = cool->CurrentFanLevel + (FanFactor*3);
+				cool->CurrentFanLevel = cool->CurrentFanLevel + (FanFactor*5);
 			SetFanPercent(cool, cool->CurrentFanLevel);
 		}
 		//LOG_INFO("Card %u Temperature %i iReduceMining %i iSleepFactor %i LastTemp %i NeedCooling %i ", deviceIdx, temp, iReduceMining, cool->SleepFactor, cool->LastTemp, cool->NeedCooling);
