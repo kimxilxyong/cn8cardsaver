@@ -595,17 +595,18 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
     const int FanAutoDefault = 50;
 	const int TickDiff = GetTickCount() - cool->LastTick;
 
+	// Get GPU temperature
+	if (Temperature(cool) == false) {
+		LOG_ERR("Failed to get Temperature for card %i", cool->Card);
+		return false;
+	}
+
 	if (TickDiff < 1000) {
 		return true;
 	}
 	cool->LastTick = GetTickCount();
 
 	//LOG_INFO("Workers::fanlevel( %i )", Workers::fanlevel());
-	
-	if (Temperature(cool) == false) {
-		LOG_ERR("Failed to get Temperature for card %i", cool->Card);
-		return false;
-	}
     
 	if (Workers::fanlevel() > 0)
 	{
@@ -646,10 +647,10 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 			LOG_INFO( YELLOW("Card %u Sleeptime is now %u"), cool->Card, cool->SleepFactor);
 		}
 		else {
-			if (cool->LastTemp < cool->CurrentTemp) {
+			if ((cool->LastTemp < cool->CurrentTemp) && (cool->CurrentTemp > (Workers::maxtemp() - Workers::falloff()))) {
 				cool->SleepFactor = (int)((float)cool->SleepFactor * IncreaseSleepFactor);
-				if (cool->SleepFactor > 10000) {
-					cool->SleepFactor = 10000;
+				if (cool->SleepFactor > 1500) {
+					cool->SleepFactor = 1500;
 				}
 				LOG_INFO("Card %u Temperature %i SleepFactor %i LastTemp %i NeedCooling %i ", cool->Card, cool->CurrentTemp, cool->SleepFactor, cool->LastTemp, cool->NeedsCooling);
 			}
@@ -657,7 +658,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 		
 	}
 	if (cool->NeedsCooling) {
-		int iReduceMining = 5;
+		int iReduceMining = 3;
 
 		if (Workers::fanlevel() == 0)
 		{

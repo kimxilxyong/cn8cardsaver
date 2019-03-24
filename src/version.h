@@ -31,7 +31,7 @@
 #define APP_VERSION   "1.1.0"
 #define APP_DOMAIN    "cn8cardsaver.com"
 #define APP_SITE      "www.cn8cardsaver.com"
-#define APP_COPYRIGHT "Copyright (C) 2018 cn8cardsaver.com"
+#define APP_COPYRIGHT "Copyright (C) 2019 cn8cardsaver.com"
 #define APP_KIND      "nvidia"
 
 #define APP_VER_MAJOR  1
