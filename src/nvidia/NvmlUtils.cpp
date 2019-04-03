@@ -628,7 +628,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 	if (cool->NeedsCooling) {
 		if (cool->CurrentTemp < (Workers::maxtemp() - Workers::falloff())) {
 			LOG_INFO( YELLOW("Card %u Temperature %i is below %i, increase mining, Sleeptime was %u"), cool->Card, cool->CurrentTemp, Workers::maxtemp() - Workers::falloff(), cool->SleepFactor);
-			cool->LastTemp = cool->CurrentTemp;
+			//cool->LastTemp = cool->CurrentTemp;
             if (cool->SleepFactor <= StartSleepFactor) {
 				cool->SleepFactor = 0;
 			    cool->NeedsCooling = false;
@@ -649,8 +649,8 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 		else {
 			if ((cool->LastTemp < cool->CurrentTemp) && (cool->CurrentTemp > (Workers::maxtemp() - Workers::falloff()))) {
 				cool->SleepFactor = (int)((float)cool->SleepFactor * IncreaseSleepFactor);
-				if (cool->SleepFactor > 1500) {
-					cool->SleepFactor = 1500;
+				if (cool->SleepFactor > 9999) {
+					cool->SleepFactor = 9999;
 				}
 				LOG_INFO("Card %u Temperature %i SleepFactor %i LastTemp %i NeedCooling %i ", cool->Card, cool->CurrentTemp, cool->SleepFactor, cool->LastTemp, cool->NeedsCooling);
 			}
@@ -658,7 +658,7 @@ bool NvmlUtils::DoCooling(CoolingContext *cool)
 		
 	}
 	if (cool->NeedsCooling) {
-		int iReduceMining = 3;
+		int iReduceMining = 5;
 
 		if (Workers::fanlevel() == 0)
 		{
