@@ -95,7 +95,7 @@ void CudaWorker::start()
 	cool.NeedsCooling = false;
 	cool.LastTemp = 0;
 
-    
+    m_thread->setCoolingContext(&cool);
 
     if (cuda_get_deviceinfo(&m_ctx, m_algorithm, false) != 0 || cryptonight_gpu_init(&m_ctx, m_algorithm) != 1) {
         LOG_ERR("Setup failed for GPU %zu. Exitting.", m_id);
@@ -133,10 +133,10 @@ void CudaWorker::start()
         //}
 
         NvmlUtils::DoCooling(&cool);
-        m_thread->setNeedsCooling(cool.NeedsCooling);
-        m_thread->setSleepFactor( cool.SleepFactor);
-        m_thread->setFanLevel(cool.CurrentFanLevel);
-        m_thread->setTemp(cool.CurrentTemp);
+        //m_thread->setNeedsCooling(cool.NeedsCooling);
+        //m_thread->setSleepFactor( cool.SleepFactor);
+        //m_thread->setFanLevel(cool.CurrentFanLevel);
+        //m_thread->setTemp(cool.CurrentTemp);
         //LOG_DEBUG("m_thread->setFanLevel(cool.CurrentFanLevel); %i", m_thread->fanLevel());
 
 
@@ -145,10 +145,10 @@ void CudaWorker::start()
         while (!Workers::isOutdated(m_sequence)) {
 
             NvmlUtils::DoCooling(&cool);
-            m_thread->setNeedsCooling(cool.NeedsCooling);
-            m_thread->setSleepFactor(cool.SleepFactor);
-            m_thread->setFanLevel(cool.CurrentFanLevel);
-			m_thread->setTemp(cool.CurrentTemp);
+            //m_thread->setNeedsCooling(cool.NeedsCooling);
+            //m_thread->setSleepFactor(cool.SleepFactor);
+            //m_thread->setFanLevel(cool.CurrentFanLevel);
+			//m_thread->setTemp(cool.CurrentTemp);
             //LOG_DEBUG("m_thread->setFanLevel(cool.CurrentFanLevel); %i", m_thread->fanLevel());
 
             uint32_t foundNonce[10];

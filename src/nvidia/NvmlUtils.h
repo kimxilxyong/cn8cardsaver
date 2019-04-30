@@ -10,23 +10,7 @@
 #include "3rdparty/nvapi/nvapi.h"
 #endif
 #include "workers/CudaThread.h"
-
-typedef struct _CoolingContext {
-	int SleepFactor = 0;
-	int LastTemp = 0;
-	int LastTick = 0;
-	int CurrentTemp = 0;
-	int CurrentFanLevel = 0;	// fan speed in percent
-	int ScreenCount = 0;
-	bool NeedsCooling = false;
-	bool FanIsAutomatic = false;
-	bool IsFanControlEnabled = false;
-	int pciBus = -1;
-	int Card = -1;
-#ifdef __linux__
-	Display *dpy;
-#endif
-} CoolingContext;
+#include "workers/CoolingContext.h"
 
 class NvmlUtils
 {

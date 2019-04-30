@@ -118,7 +118,7 @@ void Workers::printHashrate(bool detail)
         for (const xmrig::IThread *t : m_controller->config()->threads()) {
             auto thread = static_cast<const CudaThread *>(t);
              Log::i()->text("| %6zu | %3zu | %3.1i%% | %3.1iC | %7s | %7s | %7s | " YELLOW("%04x:%02x:%02x") " | " WHITE_BOLD("%s "),
-                            i, thread->cardId(), thread->fanLevel(), thread->temp(),
+                            i, thread->cardId(), thread->cool()->CurrentFanLevel, thread->cool()->CurrentTemp,
                             Hashrate::format(m_hashrate->calc(i, Hashrate::ShortInterval), num1, sizeof num1),
                             Hashrate::format(m_hashrate->calc(i, Hashrate::MediumInterval), num2, sizeof num2),
                             Hashrate::format(m_hashrate->calc(i, Hashrate::LargeInterval), num3, sizeof num3),
@@ -165,10 +165,10 @@ void Workers::printHealth()
                     //thread->index(), thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID(), thread->nvmlId(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor() );                     
                     thread->cardId(), 
                     thread->pciDomainID(), thread->pciBusID(), thread->pciDeviceID(), 
-                    thread->nvmlId(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor() );                     
+                    thread->nvmlId(), health.clock, health.memClock, health.power / 1000, (temp < 45 ? "\x1B[01;32m" : (temp > 65 ? "\x1B[01;31m" : "\x1B[01;33m")), temp, health.fanSpeed, (thread->cool()->NeedsCooling ? "TRUE" : "FALSE" ), thread->cool()->SleepFactor );                     
             }
             else {
-                LOG_INFO(" * GPU #%i:%i Nvml %i %u/%u MHz %uW %uC FAN %u%% Cooling %s Sleep %i", thread->cardId(), thread->pciBusID(), thread->nvmlId(), health.clock, health.memClock, health.power / 1000, health.temperature, health.fanSpeed, (thread->NeedsCooling() ? "TRUE" : "FALSE" ), thread->SleepFactor());
+                LOG_INFO(" * GPU #%i:%i Nvml %i %u/%u MHz %uW %uC FAN %u%% Cooling %s Sleep %i", thread->cardId(), thread->pciBusID(), thread->nvmlId(), health.clock, health.memClock, health.power / 1000, health.temperature, health.fanSpeed, (thread->cool()->NeedsCooling ? "TRUE" : "FALSE" ), thread->cool()->SleepFactor);
             }
 
             continue;

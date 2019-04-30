@@ -55,8 +55,8 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
      * open a connection to the X server indicated by the DISPLAY
      * environment variable
      */
-    
-    cool->dpy = XOpenDisplay(NULL);
+    Display *dpy = XOpenDisplay(NULL);
+    cool->dpy = (void *)dpy;
     if (!cool->dpy) {
         LOG_ERR("Cannot open display '%s'.\n", XDisplayName(NULL));
         return 1;
@@ -66,7 +66,7 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
      * check if the NV-CONTROL X extension is present on this X server
      */
 
-    r = XNVCTRLQueryExtension(cool->dpy, &event_base, &error_base);
+    r = XNVCTRLQueryExtension(dpy, &event_base, &error_base);
     if (r != true) {
         LOG_ERR("The NV-CONTROL X extension does not exist on '%s'.\n", XDisplayName(NULL));
         return r;
@@ -76,7 +76,7 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
      * query the major and minor extension version
      */
 
-    r = XNVCTRLQueryVersion(cool->dpy, &major, &minor);
+    r = XNVCTRLQueryVersion(dpy, &major, &minor);
     if (r != True) {
         LOG_ERR("The NV-CONTROL X extension does not exist on '%s'.\n", XDisplayName(NULL));
         return r;
@@ -113,7 +113,7 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
     //LOG_INFO("Try getting NV_CTRL_GPU_COOLER_MANUAL_CONTROL");
     value = 0;
     r = XNVCTRLQueryTargetAttribute(
-                cool->dpy,
+                dpy,
                 NV_CTRL_TARGET_TYPE_GPU,
                 cool->Card, // gpu
                 0,
@@ -133,7 +133,7 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
 
     // try to set fan control to manual
     r = XNVCTRLSetTargetAttributeAndGetStatus(
-                cool->dpy,
+                dpy,
                 NV_CTRL_TARGET_TYPE_GPU,
                 cool->Card, // gpu
                 0,
@@ -148,7 +148,7 @@ bool NvmlUtils::NVCtrlInit(CoolingContext *cool, CudaThread * thread)
     // set back the fan control to automatic if it was automatic
     if (cool->FanIsAutomatic) {
         r = XNVCTRLSetTargetAttributeAndGetStatus(
-                    cool->dpy,
+                    dpy,
                     NV_CTRL_TARGET_TYPE_GPU,
                     cool->Card,  // gpu
                     0,
@@ -260,7 +260,7 @@ bool  NvmlUtils::NVCtrlClose(CoolingContext *cool)
 		NvmlUtils::SetFanPercent(cool, cool->CurrentFanLevel);
 	}
     // close the display connection
-    XCloseDisplay(cool->dpy);
+    XCloseDisplay( (Display *)(cool->dpy) );
     return true;
 #else	
 	NvAPI_Status ret = NVAPI_OK;
@@ -280,10 +280,12 @@ bool NvmlUtils::Get_DeviceID_by_PCI( CoolingContext *cool, CudaThread * thread)
     int nv_ctrl_pci_domain;
     int nv_ctrl_pci_func;
 
+    Display *dpy = (Display *)(cool->dpy);
+
     for (int i = 0; i < 16; i++) {
-        XNVCTRLQueryTargetAttribute(cool->dpy, NV_CTRL_TARGET_TYPE_GPU, i, 0, NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
-        XNVCTRLQueryTargetAttribute(cool->dpy, NV_CTRL_TARGET_TYPE_GPU, i, 0, NV_CTRL_PCI_BUS, &nv_ctrl_pci_bus);
-        XNVCTRLQueryTargetAttribute(cool->dpy, NV_CTRL_TARGET_TYPE_GPU, i, 0, NV_CTRL_PCI_DEVICE, &nv_ctrl_pci_device);
+        XNVCTRLQueryTargetAttribute(dpy, NV_CTRL_TARGET_TYPE_GPU, i, 0, NV_CTRL_PCI_DOMAIN, &nv_ctrl_pci_domain);
+        XNVCTRLQueryTargetAttribute(dpy, NV_CTRL_TARGET_TYPE_GPU, i, 0, NV_CTRL_PCI_BUS, &nv_ctrl_pci_bus);
+        XNVCTRLQueryTargetAttribute(dpy, NV_CTRL_TARGET_TYPE_GPU, i, 0, NV_CTRL_PCI_DEVICE, &nv_ctrl_pci_device);
 
         if (nv_ctrl_pci_bus == thread->pciBusID() && nv_ctrl_pci_device == thread->pciDeviceID() && nv_ctrl_pci_domain == thread->pciDomainID()) {
             result = i;
@@ -345,9 +347,11 @@ bool NvmlUtils::SetFanPercentLinux(CoolingContext *cool, int percent)
 
 	cool->IsFanControlEnabled = true;
 
+	Display *dpy = (Display *)(cool->dpy);
+
 	if (percent == 0) {
 	    bool r = XNVCTRLSetTargetAttributeAndGetStatus(
-            cool->dpy,
+            dpy,
             NV_CTRL_TARGET_TYPE_GPU,
             cool->Card, // gpu
             0,
@@ -365,7 +369,7 @@ bool NvmlUtils::SetFanPercentLinux(CoolingContext *cool, int percent)
 	    bool r;
         if (cool->FanIsAutomatic) {
             r = XNVCTRLSetTargetAttributeAndGetStatus(
-                cool->dpy,
+                dpy,
                 NV_CTRL_TARGET_TYPE_GPU,
                 cool->Card, // gpu
                 0,
@@ -382,7 +386,7 @@ bool NvmlUtils::SetFanPercentLinux(CoolingContext *cool, int percent)
         int speed = percent;
 
         r = XNVCTRLSetTargetAttributeAndGetStatus(
-                    cool->dpy,
+                    dpy,
                     NV_CTRL_TARGET_TYPE_COOLER,
                     cool->Card, // gpu
                     0,
@@ -438,7 +442,7 @@ bool NvmlUtils::GetFanPercentLinux(CoolingContext *cool, int *percent)
 #ifdef __linux__
     int value = 0;
     const Bool ret = XNVCTRLQueryTargetAttribute(
-                cool->dpy,
+                (Display *)(cool->dpy),
                 NV_CTRL_TARGET_TYPE_COOLER,
                 cool->Card,
                 0,
@@ -540,7 +544,7 @@ bool NvmlUtils::Temperature(CoolingContext *cool)
     }
     int value = 0;
     Bool r = XNVCTRLQueryTargetAttribute(
-                cool->dpy,
+                (Display *)(cool->dpy),
                 NV_CTRL_TARGET_TYPE_THERMAL_SENSOR,
                 cool->Card,
                 0,

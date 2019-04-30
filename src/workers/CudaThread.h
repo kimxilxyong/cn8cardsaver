@@ -24,12 +24,16 @@
 #ifndef XMRIG_CUDATHREAD_H
 #define XMRIG_CUDATHREAD_H
 
+
+
+
 #include <vector>
 
 
 #include "interfaces/IThread.h"
 #include "nvidia/cryptonight.h"
 
+#include "workers/CoolingContext.h"
 
 class CudaThread : public xmrig::IThread
 {
@@ -38,8 +42,8 @@ public:
     CudaThread(const nvid_ctx &ctx, int64_t affinity, xmrig::Algo algorithm);
     CudaThread(const rapidjson::Value &object);
 
-    bool m_NeedsCooling;
-    int m_SleepFactor;
+    //bool m_NeedsCooling;
+    //int m_SleepFactor;
 
     bool init(xmrig::Algo algorithm);
     void limit(int maxUsage, int maxThreads);
@@ -53,8 +57,8 @@ public:
     inline int memoryClockRate() const    { return m_memoryClockRate; }
     inline int nvmlId() const             { return m_nvmlId; }
     inline int cardId() const             { return m_cardId; }
-    inline int fanLevel() const           { return m_fanLevel; }
-	inline int temp() const				  { return m_temp; }
+    //inline int fanLevel() const           { return m_fanLevel; }
+	//inline int temp() const				  { return m_temp; }
     inline int smx() const                { return m_smx; }
     inline int threads() const            { return m_threads; }
     inline size_t threadId() const        { return m_threadId; }
@@ -70,8 +74,8 @@ public:
     inline size_t index() const override          { return m_index; }
     inline Type type() const override             { return CUDA; }
 
-    inline bool NeedsCooling() const { return m_NeedsCooling; }
-    inline int SleepFactor() const { return m_SleepFactor; }
+    //inline bool NeedsCooling() const { return m_NeedsCooling; }
+    //inline int SleepFactor() const { return m_SleepFactor; }
 
     inline void setAffinity(int affinity)      { m_affinity = affinity; }
     inline void setBFactor(int bfactor)        { if (bfactor >= 0 && bfactor <= 12) { m_bfactor = bfactor; } }
@@ -80,14 +84,17 @@ public:
     inline void setIndex(size_t index)         { m_index = index; }
     inline void setNvmlId(int id)              { m_nvmlId = id; }
     inline void setCardId(int id)              { m_cardId = id; }
-	inline void setTemp(int temp)			   { m_temp = temp; }
+	//inline void setTemp(int temp)			   { m_temp = temp; }
     inline void setThreadId(size_t threadId)   { m_threadId = threadId; }
     inline void setThreads(int threads)        { m_threads = threads; }
     inline void setSyncMode(uint32_t syncMode) { m_syncMode = syncMode > 3 ? 3 : syncMode; }
-    inline void setFanLevel(int fanLevel)      { m_fanLevel = fanLevel;}
+    //inline void setFanLevel(int fanLevel)      { m_fanLevel = fanLevel;}
 
-    inline void setNeedsCooling(bool NeedsCooling) { m_NeedsCooling = NeedsCooling; }
-    inline void setSleepFactor(int SleepFactor) { m_SleepFactor = SleepFactor; }
+    //inline void setNeedsCooling(bool NeedsCooling) { m_NeedsCooling = NeedsCooling; }
+    //inline void setSleepFactor(int SleepFactor) { m_SleepFactor = SleepFactor; }
+
+    inline CoolingContext* cool() const { return m_cool; }
+    inline void setCoolingContext(CoolingContext *cool) {m_cool = cool; }
     
 
 protected:
@@ -111,8 +118,8 @@ private:
     int m_memoryClockRate;
     int m_nvmlId;
     int m_cardId;
-    int m_fanLevel;
-	int m_temp;
+    //int m_fanLevel;
+	//int m_temp;
     int m_smx;
     int m_threads;
     int64_t m_affinity;
@@ -123,6 +130,7 @@ private:
     uint32_t m_pciDomainID;
     uint32_t m_syncMode;
     xmrig::Algo m_algorithm;
+    CoolingContext *m_cool;
 };
 
 
