@@ -301,12 +301,12 @@ target_link_libraries(${CMAKE_PROJECT_NAME} xmrig-cuda ${XMRIG_ASM_LIBRARY} ${OP
 if (WIN32)
     if (CUDA_VERSION_MAJOR EQUAL 10)
       add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
-          COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc64_100_0.dll" $<TARGET_FILE_DIR:xmrig-nvidia>)
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc64_100_0.dll" $<TARGET_FILE_DIR:cn8cardsaver-nvidia>)
     else()
         add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc64_${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}.dll" $<TARGET_FILE_DIR:xmrig-nvidia>)
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc64_${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}.dll" $<TARGET_FILE_DIR:cn8cardsaver-nvidia>)
     endif()
 
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc-builtins64_${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}.dll" $<TARGET_FILE_DIR:xmrig-nvidia>)
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc-builtins64_${CUDA_VERSION_MAJOR}${CUDA_VERSION_MINOR}.dll" $<TARGET_FILE_DIR:cn8cardsaver-nvidia>)
 endif()
